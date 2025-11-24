@@ -1,0 +1,61 @@
+@use 'variables' as *;
+
+// Light Theme
+:root,
+[data-theme='light'] {
+  --color-primary: #{$primary};
+  --color-primary-light: #{$primary-light};
+  --color-primary-dark: #{$primary-dark};
+  --color-secondary: #{$secondary};
+  --color-accent: #{$accent};
+  --color-info: #{$info};
+  --color-success: #{$success};
+  --color-warning: #{$warning};
+  --color-error: #{$error};
+
+  --color-text-primary: #{$text-primary};
+  --color-text-secondary: #{$text-secondary};
+  --color-text-disabled: #{$text-disabled};
+  --color-text-hint: #{$text-hint};
+
+  --color-bg-default: #{$bg-default};
+  --color-bg-paper: #{$bg-paper};
+  --color-border: #{$border-light};
+
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+}
+
+// Dark Theme
+[data-theme='dark'] {
+  --color-primary: #{$primary-light};
+  --color-primary-light: #{$primary};
+  --color-primary-dark: #{$primary-dark};
+  --color-secondary: #B0BEC5;
+  --color-accent: #{$accent};
+  --color-info: #64B5F6;
+  --color-success: #81C784;
+  --color-warning: #FFB74D;
+  --color-error: #E57373;
+
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #B0BEC5;
+  --color-text-disabled: #616161;
+  --color-text-hint: #757575;
+
+  --color-bg-default: #121212;
+  --color-bg-paper: #1E1E1E;
+  --color-border: #{$border-dark};
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+// Theme transition
+* {
+  transition: background-color $transition-normal,
+              border-color $transition-normal,
+              color $transition-fast;
+}
