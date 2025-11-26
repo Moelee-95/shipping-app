@@ -16,7 +16,8 @@ const { confirm } = useConfirm()
 const filters = ref({
   search: '',
   dateFrom: '',
-  dateTo: ''
+  dateTo: '',
+  state: ''
 })
 
 const availableOrders = computed(() => driverStore.availableOrders)
@@ -42,7 +43,8 @@ const handleReset = () => {
   filters.value = {
     search: '',
     dateFrom: '',
-    dateTo: ''
+    dateTo: '',
+    state: ''
   }
   fetchOrders()
 }
@@ -91,6 +93,7 @@ const handleViewOrder = (order) => {
     <OrderFilters
       v-model="filters"
       hide-status
+      show-state-filter
       @search="handleSearch"
       @reset="handleReset"
     />

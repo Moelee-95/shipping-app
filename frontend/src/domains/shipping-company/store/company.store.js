@@ -10,7 +10,7 @@ export const useCompanyStore = defineStore('company', {
       activeOrders: 0,
       completedOrders: 0,
       cancelledOrders: 0,
-      totalSpent: 0
+      totalRevenue: 0
     },
     orders: [],
     currentOrder: null,
@@ -43,9 +43,21 @@ export const useCompanyStore = defineStore('company', {
       this.statsLoading = true
       try {
         const response = await companyService.getStats()
-        this.stats = response.data.stats || response.data
+        const data = response.data.stats || response.data.data || response.data
+
+        // Map snake_case to camelCase
+        this.stats = {
+          totalOrders: data.total_orders || 0,
+          pendingOrders: data.pending_orders || 0,
+          activeOrders: data.active_orders || 0,
+          completedOrders: data.completed_orders || 0,
+          cancelledOrders: data.cancelled_orders || 0,
+          totalRevenue: data.total_revenue || 0
+        }
+
         return response
       } catch (error) {
+        console.error('Error fetching company stats:', error)
         throw error
       } finally {
         this.statsLoading = false

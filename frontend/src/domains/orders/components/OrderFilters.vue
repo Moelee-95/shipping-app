@@ -1,6 +1,7 @@
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, watch, ref } from 'vue'
 import { ORDER_STATUS_OPTIONS } from '@/shared/utils/constants'
+import { US_STATES } from '@/shared/utils/us-states'
 
 const props = defineProps({
   modelValue: {
@@ -8,6 +9,10 @@ const props = defineProps({
     default: () => ({})
   },
   hideStatus: {
+    type: Boolean,
+    default: false
+  },
+  showStateFilter: {
     type: Boolean,
     default: false
   }
@@ -19,16 +24,47 @@ const filters = reactive({
   status: '',
   search: '',
   dateFrom: '',
-  dateTo: ''
+  dateTo: '',
+  state: ''
 })
+
+const dateRange = ref([])
 
 watch(
   () => props.modelValue,
   (value) => {
     Object.assign(filters, value)
+    // Initialize date range from filters
+    if (value.dateFrom && value.dateTo) {
+      dateRange.value = [new Date(value.dateFrom), new Date(value.dateTo)]
+    } else if (value.dateFrom || value.dateTo) {
+      dateRange.value = [
+        value.dateFrom ? new Date(value.dateFrom) : null,
+        value.dateTo ? new Date(value.dateTo) : null
+      ]
+    }
   },
   { immediate: true }
 )
+
+watch(dateRange, (newRange) => {
+  if (newRange && newRange.length === 2) {
+    filters.dateFrom = newRange[0] ? formatDate(newRange[0]) : ''
+    filters.dateTo = newRange[1] ? formatDate(newRange[1]) : ''
+  } else {
+    filters.dateFrom = ''
+    filters.dateTo = ''
+  }
+})
+
+const formatDate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 const updateFilters = () => {
   emit('update:modelValue', { ...filters })
@@ -40,6 +76,8 @@ const resetFilters = () => {
   filters.search = ''
   filters.dateFrom = ''
   filters.dateTo = ''
+  filters.state = ''
+  dateRange.value = []
   emit('update:modelValue', { ...filters })
   emit('reset')
 }
@@ -60,17 +98,17 @@ const resetFilters = () => {
           sm="6"
           md="3"
         >
-          <v-text-field
+          <el-input
             v-model="filters.search"
-            label="Search"
-            variant="outlined"
-            density="compact"
-            prepend-inner-icon="mdi-magnify"
+            placeholder="Search"
             clearable
-            hide-details
             @keyup.enter="updateFilters"
-            @click:clear="updateFilters"
-          />
+            @clear="updateFilters"
+          >
+            <template #prefix>
+              <v-icon icon="mdi-magnify" size="small" />
+            </template>
+          </el-input>
         </v-col>
         <v-col
           v-if="!hideStatus"
@@ -78,46 +116,59 @@ const resetFilters = () => {
           sm="6"
           md="2"
         >
-          <v-select
+          <el-select
             v-model="filters.status"
-            :items="ORDER_STATUS_OPTIONS"
-            item-title="label"
-            item-value="value"
-            label="Status"
-            variant="outlined"
-            density="compact"
+            placeholder="Status"
             clearable
-            hide-details
-            @update:model-value="updateFilters"
-          />
-        </v-col>
-        <v-col
-          cols="12"
-          sm="6"
-          md="2"
-        >
-          <v-text-field
-            v-model="filters.dateFrom"
-            label="From Date"
-            type="date"
-            variant="outlined"
-            density="compact"
-            hide-details
             @change="updateFilters"
-          />
+            style="width: 100%"
+          >
+            <el-option
+              v-for="option in ORDER_STATUS_OPTIONS"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </el-select>
         </v-col>
         <v-col
+          v-if="showStateFilter"
           cols="12"
           sm="6"
           md="2"
         >
-          <v-text-field
-            v-model="filters.dateTo"
-            label="To Date"
-            type="date"
-            variant="outlined"
-            density="compact"
-            hide-details
+          <el-select
+            v-model="filters.state"
+            placeholder="Filter by State"
+            clearable
+            filterable
+            @change="updateFilters"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="state in US_STATES"
+              :key="state.value"
+              :label="`${state.label} (${state.value})`"
+              :value="state.value"
+            />
+          </el-select>
+        </v-col>
+        <v-col
+          cols="12"
+          sm="6"
+          :md="hideStatus && !showStateFilter ? 4 : showStateFilter && !hideStatus ? 3 : hideStatus ? 3 : 4"
+        >
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            range-separator="to"
+            start-placeholder="Start date"
+            end-placeholder="End date"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+            size="default"
+            clearable
             @change="updateFilters"
           />
         </v-col>
@@ -153,3 +204,7 @@ const resetFilters = () => {
     </v-card-text>
   </v-card>
 </template>
+
+<style scoped>
+/* Component-specific styles if needed */
+</style>

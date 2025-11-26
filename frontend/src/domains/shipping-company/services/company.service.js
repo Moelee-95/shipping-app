@@ -244,7 +244,7 @@ export default {
       MOCK_ORDERS.unshift(newOrder)
       return Promise.resolve({ data: { order: newOrder } })
     }
-    return api.post('/orders', orderData)
+    return api.post('/company/orders', orderData)
   },
 
   updateOrder(orderId, orderData) {
@@ -256,7 +256,7 @@ export default {
       }
       return Promise.reject({ response: { data: { message: 'Order not found' } } })
     }
-    return api.put(`/orders/${orderId}`, orderData)
+    return api.patch(`/company/orders/${orderId}`, orderData)
   },
 
   deleteOrder(orderId) {
@@ -268,10 +268,10 @@ export default {
       }
       return Promise.reject({ response: { data: { message: 'Order not found' } } })
     }
-    return api.delete(`/orders/${orderId}`)
+    return api.delete(`/company/orders/${orderId}`)
   },
 
-  cancelOrder(orderId) {
+  cancelOrder(orderId, reason = 'Cancelled by company') {
     if (MOCK_AUTH) {
       const index = MOCK_ORDERS.findIndex(o => o.id === parseInt(orderId))
       if (index !== -1) {
@@ -282,7 +282,7 @@ export default {
       }
       return Promise.reject({ response: { data: { message: 'Order not found' } } })
     }
-    return api.post(`/orders/${orderId}/cancel`)
+    return api.delete(`/company/orders/${orderId}`, { data: { cancellation_reason: reason } })
   },
 
   // Analytics

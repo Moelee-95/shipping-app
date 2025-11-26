@@ -14,7 +14,7 @@
     <OrderStatistics :stats="stats" :loading="statsLoading" class="mb-6" />
 
     <v-row>
-      <v-col cols="12" lg="8">
+      <v-col cols="12">
         <v-card>
           <v-card-title class="d-flex align-center justify-space-between">
             <span>Recent Orders</span>
@@ -36,10 +36,6 @@
           </v-card-text>
         </v-card>
       </v-col>
-
-      <v-col cols="12" lg="4">
-        <QuickOrderForm :loading="createLoading" @submit="handleQuickOrder" ref="quickOrderRef" />
-      </v-col>
     </v-row>
 
     <ConfirmDialog
@@ -60,7 +56,6 @@ import { useCompanyStore } from '../store/company.store'
 import PageHeader from '@/shared/components/common/PageHeader.vue'
 import OrderStatistics from '../components/OrderStatistics.vue'
 import CompanyOrdersList from '../components/CompanyOrdersList.vue'
-import QuickOrderForm from '../components/QuickOrderForm.vue'
 import ConfirmDialog from '@/shared/components/ui/ConfirmDialog.vue'
 
 const router = useRouter()

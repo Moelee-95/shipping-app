@@ -163,13 +163,44 @@ export const useOrdersStore = defineStore('orders', {
       this.loading = true
       try {
         const response = await ordersService.updateOrderStatus(id, status)
-        const index = this.myOrders.findIndex((o) => o.id === id)
-        if (index !== -1) {
-          this.myOrders[index] = response.data.data
+        const updatedOrder = response.data.data
+
+        // Update in myOrders array
+        const myOrderIndex = this.myOrders.findIndex((o) => o.id === id)
+        if (myOrderIndex !== -1) {
+          this.myOrders.splice(myOrderIndex, 1, updatedOrder)
         }
+
+        // Update in orders array
+        const orderIndex = this.orders.findIndex((o) => o.id === id)
+        if (orderIndex !== -1) {
+          this.orders.splice(orderIndex, 1, updatedOrder)
+        }
+
+        // Update current order
         if (this.currentOrder?.id === id) {
-          this.currentOrder = response.data.data
+          this.currentOrder = updatedOrder
         }
+
+        // Sync with driver store if it exists
+        try {
+          const { useDriverStore } = await import('@/domains/driver/store/driver.store')
+          const driverStore = useDriverStore()
+          const driverOrderIndex = driverStore.myOrders.findIndex((o) => o.id === id)
+          if (driverOrderIndex !== -1) {
+            driverStore.myOrders.splice(driverOrderIndex, 1, updatedOrder)
+
+            // Update driver stats if status is delivered
+            if (status === 'delivered') {
+              driverStore.stats.activeOrders = Math.max(0, driverStore.stats.activeOrders - 1)
+              driverStore.stats.completedOrders++
+              driverStore.stats.totalEarnings += updatedOrder.price || 0
+            }
+          }
+        } catch (e) {
+          // Driver store not available, skip sync
+        }
+
         return response
       } catch (error) {
         throw error

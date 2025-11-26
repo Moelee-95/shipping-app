@@ -21,10 +21,17 @@ const statCards = [
     format: 'number'
   },
   {
-    key: 'activeOrders',
-    title: 'Active Orders',
-    icon: 'mdi-truck-delivery',
+    key: 'pendingOrders',
+    title: 'Pending',
+    icon: 'mdi-clock-outline',
     color: 'warning',
+    format: 'number'
+  },
+  {
+    key: 'activeOrders',
+    title: 'Active',
+    icon: 'mdi-truck-delivery',
+    color: 'info',
     format: 'number'
   },
   {
@@ -38,10 +45,32 @@ const statCards = [
     key: 'totalEarnings',
     title: 'Total Earnings',
     icon: 'mdi-cash-multiple',
-    color: 'info',
+    color: 'secondary',
     format: 'currency'
+  },
+  {
+    key: 'rating',
+    title: 'Rating',
+    icon: 'mdi-star',
+    color: 'amber',
+    format: 'rating'
   }
 ]
+
+const formatValue = (value, format) => {
+  if (value === null || value === undefined) {
+    return format === 'rating' ? 'N/A' : '0'
+  }
+
+  switch (format) {
+    case 'currency':
+      return formatCurrency(value)
+    case 'rating':
+      return value.toFixed(1) + ' ★'
+    default:
+      return formatNumber(value)
+  }
+}
 </script>
 
 <template>
@@ -51,24 +80,27 @@ const statCards = [
       :key="card.key"
       cols="12"
       sm="6"
-      md="3"
+      md="4"
+      lg="2"
     >
       <v-card
+        class="stat-card"
         :loading="loading"
         elevation="2"
       >
-        <v-card-text>
+        <v-card-text class="pa-4">
           <div class="d-flex align-center justify-space-between">
             <div>
               <div class="text-caption text-grey mb-1">{{ card.title }}</div>
               <div class="text-h5 font-weight-bold">
-                {{ card.format === 'currency' ? formatCurrency(stats[card.key]) : formatNumber(stats[card.key]) }}
+                {{ formatValue(stats[card.key], card.format) }}
               </div>
             </div>
             <v-avatar
               :color="card.color"
               size="48"
               variant="tonal"
+              class="stat-icon"
             >
               <v-icon
                 :icon="card.icon"
@@ -81,3 +113,18 @@ const statCards = [
     </v-col>
   </v-row>
 </template>
+
+<style scoped>
+.stat-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+  flex-shrink: 0;
+}
+</style>

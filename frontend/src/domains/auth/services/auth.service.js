@@ -15,5 +15,13 @@ export default {
 
   getUser() {
     return api.get('/user')
+  },
+
+  updateProfile(profileData) {
+    return api.patch('/profile', profileData)
+  },
+
+  updatePassword(passwordData) {
+    return api.patch('/password', passwordData)
   }
 }

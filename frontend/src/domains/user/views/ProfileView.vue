@@ -76,6 +76,69 @@
                     :variant="editMode ? 'outlined' : 'plain'"
                   />
                 </v-col>
+                <v-col cols="12" sm="6" v-if="user?.role === 'driver'">
+                  <v-text-field
+                    v-model="form.license_number"
+                    label="License Number"
+                    prepend-inner-icon="mdi-card-account-details"
+                    :readonly="!editMode"
+                    :variant="editMode ? 'outlined' : 'plain'"
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" v-if="user?.role === 'driver'">
+                  <v-text-field
+                    v-model="form.vehicle_type"
+                    label="Vehicle Type"
+                    prepend-inner-icon="mdi-truck"
+                    :readonly="!editMode"
+                    :variant="editMode ? 'outlined' : 'plain'"
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" v-if="user?.role === 'driver'">
+                  <v-text-field
+                    v-model="form.vehicle_plate"
+                    label="Vehicle Plate"
+                    prepend-inner-icon="mdi-card-text"
+                    :readonly="!editMode"
+                    :variant="editMode ? 'outlined' : 'plain'"
+                  />
+                </v-col>
+                <v-col cols="12" v-if="user?.role === 'shipping_company'">
+                  <v-text-field
+                    v-model="form.address"
+                    label="Address"
+                    prepend-inner-icon="mdi-map-marker"
+                    :readonly="!editMode"
+                    :variant="editMode ? 'outlined' : 'plain'"
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" v-if="user?.role === 'shipping_company'">
+                  <v-text-field
+                    v-model="form.city"
+                    label="City"
+                    prepend-inner-icon="mdi-city"
+                    :readonly="!editMode"
+                    :variant="editMode ? 'outlined' : 'plain'"
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" v-if="user?.role === 'shipping_company'">
+                  <v-text-field
+                    v-model="form.state"
+                    label="State"
+                    prepend-inner-icon="mdi-map"
+                    :readonly="!editMode"
+                    :variant="editMode ? 'outlined' : 'plain'"
+                  />
+                </v-col>
+                <v-col cols="12" sm="6" v-if="user?.role === 'shipping_company'">
+                  <v-text-field
+                    v-model="form.zip_code"
+                    label="ZIP Code"
+                    prepend-inner-icon="mdi-mailbox"
+                    :readonly="!editMode"
+                    :variant="editMode ? 'outlined' : 'plain'"
+                  />
+                </v-col>
               </v-row>
 
               <div v-if="editMode" class="d-flex gap-2 mt-4">
@@ -179,6 +242,7 @@ import { useAuthStore } from '@/domains/auth/store/auth.store'
 import { useNotification } from '@/shared/composables/useNotification'
 import { formatRole } from '@/shared/utils/formatters'
 import PageHeader from '@/shared/components/common/PageHeader.vue'
+import authService from '@/domains/auth/services/auth.service'
 
 const authStore = useAuthStore()
 const notification = useNotification()
@@ -202,7 +266,14 @@ const form = ref({
   name: '',
   email: '',
   phone: '',
-  company_name: ''
+  company_name: '',
+  license_number: '',
+  vehicle_type: '',
+  vehicle_plate: '',
+  address: '',
+  city: '',
+  state: '',
+  zip_code: ''
 })
 
 const passwordForm = ref({
@@ -213,11 +284,19 @@ const passwordForm = ref({
 
 onMounted(() => {
   if (user.value) {
+    const userable = user.value.userable || {}
     form.value = {
       name: user.value.name || '',
       email: user.value.email || '',
-      phone: user.value.phone || '',
-      company_name: user.value.company_name || ''
+      phone: userable.phone || '',
+      company_name: userable.company_name || '',
+      license_number: userable.license_number || '',
+      vehicle_type: userable.vehicle_type || '',
+      vehicle_plate: userable.vehicle_plate || '',
+      address: userable.address || '',
+      city: userable.city || '',
+      state: userable.state || '',
+      zip_code: userable.zip_code || ''
     }
   }
 })
@@ -230,40 +309,76 @@ const formatDate = (dateString) => {
 }
 
 const saveProfile = async () => {
+  if (!formValid.value) {
+    notification.error('Please fill in all required fields correctly')
+    return
+  }
+
   saving.value = true
   try {
-    // In mock mode, just update localStorage
-    const updatedUser = { ...user.value, ...form.value }
-    localStorage.setItem('user', JSON.stringify(updatedUser))
-    authStore.user = updatedUser
+    const response = await authService.updateProfile(form.value)
+
+    // Update auth store with the new user data
+    if (response.data.user) {
+      authStore.user = response.data.user
+    }
+
     notification.success('Profile updated successfully!')
     editMode.value = false
   } catch (error) {
-    notification.error('Failed to update profile')
+    console.error('Profile update error:', error)
+    notification.error(error.response?.data?.message || 'Failed to update profile')
   } finally {
     saving.value = false
   }
 }
 
 const cancelEdit = () => {
+  const userable = user.value?.userable || {}
   form.value = {
     name: user.value?.name || '',
     email: user.value?.email || '',
-    phone: user.value?.phone || '',
-    company_name: user.value?.company_name || ''
+    phone: userable.phone || '',
+    company_name: userable.company_name || '',
+    license_number: userable.license_number || '',
+    vehicle_type: userable.vehicle_type || '',
+    vehicle_plate: userable.vehicle_plate || '',
+    address: userable.address || '',
+    city: userable.city || '',
+    state: userable.state || '',
+    zip_code: userable.zip_code || ''
   }
   editMode.value = false
 }
 
-const changePassword = () => {
+const changePassword = async () => {
   if (passwordForm.value.new !== passwordForm.value.confirm) {
     notification.error('Passwords do not match')
     return
   }
-  // Mock implementation
-  notification.success('Password changed successfully!')
-  showPasswordDialog.value = false
-  passwordForm.value = { current: '', new: '', confirm: '' }
+
+  if (passwordForm.value.new.length < 8) {
+    notification.error('Password must be at least 8 characters')
+    return
+  }
+
+  try {
+    await authService.updatePassword({
+      current_password: passwordForm.value.current,
+      password: passwordForm.value.new,
+      password_confirmation: passwordForm.value.confirm
+    })
+
+    notification.success('Password changed successfully!')
+    showPasswordDialog.value = false
+    passwordForm.value = { current: '', new: '', confirm: '' }
+  } catch (error) {
+    console.error('Password update error:', error)
+    const errorMessage = error.response?.data?.errors?.current_password?.[0]
+      || error.response?.data?.message
+      || 'Failed to update password'
+    notification.error(errorMessage)
+  }
 }
 </script>
 

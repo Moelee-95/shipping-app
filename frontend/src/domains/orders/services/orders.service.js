@@ -212,7 +212,8 @@ export default {
     if (MOCK_AUTH) {
       return Promise.resolve({ data: { data: MOCK_ORDERS } })
     }
-    return api.get('/orders', { params })
+    // This should be called through company/driver specific services
+    return api.get('/company/orders', { params })
   },
 
   getOrder(id) {
@@ -223,6 +224,7 @@ export default {
       }
       return Promise.reject({ response: { data: { message: 'Order not found' } } })
     }
+    // Generic order endpoint for viewing order details
     return api.get(`/orders/${id}`)
   },
 
@@ -239,7 +241,7 @@ export default {
       MOCK_ORDERS.unshift(newOrder)
       return Promise.resolve({ data: { data: newOrder } })
     }
-    return api.post('/orders', data)
+    return api.post('/company/orders', data)
   },
 
   updateOrder(id, data) {
@@ -251,7 +253,7 @@ export default {
       }
       return Promise.reject({ response: { data: { message: 'Order not found' } } })
     }
-    return api.put(`/orders/${id}`, data)
+    return api.patch(`/company/orders/${id}`, data)
   },
 
   deleteOrder(id) {
@@ -263,7 +265,7 @@ export default {
       }
       return Promise.reject({ response: { data: { message: 'Order not found' } } })
     }
-    return api.delete(`/orders/${id}`)
+    return api.delete(`/company/orders/${id}`)
   },
 
   getAvailableOrders(params = {}) {
@@ -271,7 +273,7 @@ export default {
       const available = MOCK_ORDERS.filter(o => o.status === 'pending')
       return Promise.resolve({ data: { data: available } })
     }
-    return api.get('/orders/available', { params })
+    return api.get('/driver/available-orders', { params })
   },
 
   acceptOrder(id) {
@@ -284,10 +286,10 @@ export default {
       }
       return Promise.reject({ response: { data: { message: 'Order not found' } } })
     }
-    return api.post(`/orders/${id}/accept`)
+    return api.post(`/driver/orders/${id}/accept`)
   },
 
-  cancelOrder(id, reason = '') {
+  cancelOrder(id, reason = 'Cancelled by company') {
     if (MOCK_AUTH) {
       const index = MOCK_ORDERS.findIndex(o => o.id === parseInt(id))
       if (index !== -1) {
@@ -299,7 +301,7 @@ export default {
       }
       return Promise.reject({ response: { data: { message: 'Order not found' } } })
     }
-    return api.post(`/orders/${id}/cancel`, { reason })
+    return api.delete(`/company/orders/${id}`, { data: { cancellation_reason: reason } })
   },
 
   updateOrderStatus(id, status) {
@@ -318,7 +320,7 @@ export default {
       }
       return Promise.reject({ response: { data: { message: 'Order not found' } } })
     }
-    return api.patch(`/orders/${id}/status`, { status })
+    return api.patch(`/driver/orders/${id}/status`, { status })
   },
 
   getMyOrders(params = {}) {
@@ -327,6 +329,6 @@ export default {
       const myOrders = MOCK_ORDERS.filter(o => ['accepted', 'picked_up', 'in_transit', 'delivered'].includes(o.status))
       return Promise.resolve({ data: { data: myOrders } })
     }
-    return api.get('/orders/my-orders', { params })
+    return api.get('/driver/my-orders', { params })
   }
 }

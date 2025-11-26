@@ -15,49 +15,45 @@
       <v-card-text>
         <v-row align="center">
           <v-col cols="12" sm="4">
-            <v-text-field
+            <el-input
               v-model="filters.search"
-              label="Search orders..."
-              prepend-inner-icon="mdi-magnify"
-              variant="outlined"
-              density="compact"
-              hide-details
+              placeholder="Search orders..."
               clearable
-              @update:model-value="debouncedSearch"
-            />
+              @input="debouncedSearch"
+            >
+              <template #prefix>
+                <v-icon icon="mdi-magnify" size="small" />
+              </template>
+            </el-input>
           </v-col>
           <v-col cols="12" sm="3">
-            <v-select
+            <el-select
               v-model="filters.status"
-              label="Status"
-              :items="statusOptions"
-              variant="outlined"
-              density="compact"
-              hide-details
+              placeholder="Status"
               clearable
-              @update:model-value="applyFilters"
-            />
+              @change="applyFilters"
+              style="width: 100%"
+            >
+              <el-option
+                v-for="option in statusOptions"
+                :key="option.value"
+                :label="option.title"
+                :value="option.value"
+              />
+            </el-select>
           </v-col>
-          <v-col cols="12" sm="2">
-            <v-text-field
-              v-model="filters.dateFrom"
-              label="From Date"
-              type="date"
-              variant="outlined"
-              density="compact"
-              hide-details
-              @update:model-value="applyFilters"
-            />
-          </v-col>
-          <v-col cols="12" sm="2">
-            <v-text-field
-              v-model="filters.dateTo"
-              label="To Date"
-              type="date"
-              variant="outlined"
-              density="compact"
-              hide-details
-              @update:model-value="applyFilters"
+          <v-col cols="12" sm="4">
+            <el-date-picker
+              v-model="dateRange"
+              type="daterange"
+              range-separator="to"
+              start-placeholder="Start date"
+              end-placeholder="End date"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              style="width: 100%"
+              size="default"
+              clearable
             />
           </v-col>
           <v-col cols="12" sm="1">
@@ -94,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCompanyStore } from '../store/company.store'
 import { ORDER_STATUS_OPTIONS } from '@/shared/utils/constants'
@@ -115,6 +111,30 @@ const filters = reactive({
   dateFrom: '',
   dateTo: ''
 })
+
+const dateRange = ref([])
+
+watch(dateRange, (newRange, oldRange) => {
+  if (newRange && newRange.length === 2) {
+    filters.dateFrom = newRange[0] ? formatDate(newRange[0]) : ''
+    filters.dateTo = newRange[1] ? formatDate(newRange[1]) : ''
+    applyFilters()
+  } else if (oldRange && oldRange.length > 0) {
+    // Only apply filters when clearing an existing range
+    filters.dateFrom = ''
+    filters.dateTo = ''
+    applyFilters()
+  }
+})
+
+const formatDate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 const statusOptions = ORDER_STATUS_OPTIONS.map(opt => ({
   title: opt.label,
@@ -147,6 +167,7 @@ const resetFilters = () => {
   filters.status = ''
   filters.dateFrom = ''
   filters.dateTo = ''
+  dateRange.value = []
   companyStore.resetFilters()
   companyStore.fetchOrders()
 }
@@ -172,3 +193,7 @@ const confirmCancelOrder = async () => {
   }
 }
 </script>
+
+<style scoped>
+/* Component-specific styles if needed */
+</style>

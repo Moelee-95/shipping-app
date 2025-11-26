@@ -171,14 +171,14 @@ export default {
     if (MOCK_AUTH) {
       return Promise.resolve({ data: { data: MOCK_MY_ORDERS } })
     }
-    return api.get('/driver/orders', { params })
+    return api.get('/driver/my-orders', { params })
   },
 
   getAvailableOrders(params = {}) {
     if (MOCK_AUTH) {
       return Promise.resolve({ data: { data: MOCK_AVAILABLE_ORDERS } })
     }
-    return api.get('/orders/available', { params })
+    return api.get('/driver/available-orders', { params })
   },
 
   acceptOrder(orderId) {
@@ -190,7 +190,7 @@ export default {
       }
       return Promise.reject({ response: { data: { message: 'Order not found' } } })
     }
-    return api.post(`/orders/${orderId}/accept`)
+    return api.post(`/driver/orders/${orderId}/accept`)
   },
 
   updateOrderStatus(orderId, status) {
@@ -202,7 +202,7 @@ export default {
       }
       return Promise.reject({ response: { data: { message: 'Order not found' } } })
     }
-    return api.patch(`/orders/${orderId}/status`, { status })
+    return api.patch(`/driver/orders/${orderId}/status`, { status })
   },
 
   getOrderDetails(orderId) {

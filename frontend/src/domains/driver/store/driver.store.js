@@ -5,9 +5,11 @@ export const useDriverStore = defineStore('driver', {
   state: () => ({
     stats: {
       totalOrders: 0,
+      pendingOrders: 0,
       completedOrders: 0,
       activeOrders: 0,
-      totalEarnings: 0
+      totalEarnings: 0,
+      rating: null
     },
     availableOrders: [],
     myOrders: [],
@@ -26,9 +28,21 @@ export const useDriverStore = defineStore('driver', {
       this.statsLoading = true
       try {
         const response = await driverService.getStats()
-        this.stats = response.data.data
+        const data = response.data.data || response.data
+
+        // Map snake_case to camelCase
+        this.stats = {
+          totalOrders: data.total_orders || 0,
+          pendingOrders: data.pending_orders || 0,
+          activeOrders: data.active_orders || 0,
+          completedOrders: data.completed_orders || 0,
+          totalEarnings: data.total_earnings || 0,
+          rating: data.rating || null
+        }
+
         return response
       } catch (error) {
+        console.error('Error fetching stats:', error)
         throw error
       } finally {
         this.statsLoading = false
@@ -39,9 +53,10 @@ export const useDriverStore = defineStore('driver', {
       this.loading = true
       try {
         const response = await driverService.getAvailableOrders(params)
-        this.availableOrders = response.data.data
+        this.availableOrders = response.data.data || response.data || []
         return response
       } catch (error) {
+        console.error('Error fetching available orders:', error)
         throw error
       } finally {
         this.loading = false
@@ -52,9 +67,10 @@ export const useDriverStore = defineStore('driver', {
       this.loading = true
       try {
         const response = await driverService.getMyOrders(params)
-        this.myOrders = response.data.data
+        this.myOrders = response.data.data || response.data || []
         return response
       } catch (error) {
+        console.error('Error fetching my orders:', error)
         throw error
       } finally {
         this.loading = false
@@ -84,16 +100,46 @@ export const useDriverStore = defineStore('driver', {
       this.loading = true
       try {
         const response = await driverService.updateOrderStatus(orderId, status)
+        const updatedOrder = response.data.data
         const index = this.myOrders.findIndex((o) => o.id === orderId)
+
         if (index !== -1) {
-          this.myOrders[index] = response.data.data
+          // Use splice to ensure reactivity
+          this.myOrders.splice(index, 1, updatedOrder)
         }
+
         // Update stats if delivered
         if (status === 'delivered') {
-          this.stats.activeOrders--
+          this.stats.activeOrders = Math.max(0, this.stats.activeOrders - 1)
           this.stats.completedOrders++
-          this.stats.totalEarnings += response.data.data.price
+          this.stats.totalEarnings += updatedOrder.price || 0
         }
+
+        // Sync with orders store if it exists
+        try {
+          const { useOrdersStore } = await import('@/domains/orders/store/orders.store')
+          const ordersStore = useOrdersStore()
+
+          // Update in myOrders array
+          const myOrderIndex = ordersStore.myOrders.findIndex((o) => o.id === orderId)
+          if (myOrderIndex !== -1) {
+            ordersStore.myOrders.splice(myOrderIndex, 1, updatedOrder)
+          }
+
+          // Update in orders array
+          const orderIndex = ordersStore.orders.findIndex((o) => o.id === orderId)
+          if (orderIndex !== -1) {
+            ordersStore.orders.splice(orderIndex, 1, updatedOrder)
+          }
+
+          // Update current order
+          if (ordersStore.currentOrder?.id === orderId) {
+            ordersStore.currentOrder = updatedOrder
+          }
+        } catch (e) {
+          // Orders store not available, skip sync
+        }
+
         return response
       } catch (error) {
         throw error

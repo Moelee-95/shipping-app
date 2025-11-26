@@ -37,7 +37,7 @@ const props = defineProps({
       activeOrders: 0,
       completedOrders: 0,
       cancelledOrders: 0,
-      totalSpent: 0
+      totalRevenue: 0
     })
   },
   loading: {
@@ -46,10 +46,15 @@ const props = defineProps({
   }
 })
 
+const formatValue = (value) => {
+  if (value === null || value === undefined) return 0
+  return typeof value === 'number' ? value : value
+}
+
 const statCards = computed(() => [
   {
     title: 'Total Orders',
-    value: props.stats.totalOrders,
+    value: formatValue(props.stats.totalOrders),
     icon: 'mdi-package-variant-closed',
     color: 'primary',
     prefix: '',
@@ -57,7 +62,7 @@ const statCards = computed(() => [
   },
   {
     title: 'Pending',
-    value: props.stats.pendingOrders,
+    value: formatValue(props.stats.pendingOrders),
     icon: 'mdi-clock-outline',
     color: 'warning',
     prefix: '',
@@ -65,7 +70,7 @@ const statCards = computed(() => [
   },
   {
     title: 'Active',
-    value: props.stats.activeOrders,
+    value: formatValue(props.stats.activeOrders),
     icon: 'mdi-truck-delivery',
     color: 'info',
     prefix: '',
@@ -73,7 +78,7 @@ const statCards = computed(() => [
   },
   {
     title: 'Completed',
-    value: props.stats.completedOrders,
+    value: formatValue(props.stats.completedOrders),
     icon: 'mdi-check-circle',
     color: 'success',
     prefix: '',
@@ -81,15 +86,15 @@ const statCards = computed(() => [
   },
   {
     title: 'Cancelled',
-    value: props.stats.cancelledOrders,
+    value: formatValue(props.stats.cancelledOrders),
     icon: 'mdi-close-circle',
     color: 'error',
     prefix: '',
     suffix: ''
   },
   {
-    title: 'Total Spent',
-    value: props.stats.totalSpent?.toLocaleString() || 0,
+    title: 'Total Revenue',
+    value: formatValue(props.stats.totalRevenue)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00',
     icon: 'mdi-currency-usd',
     color: 'secondary',
     prefix: '$',

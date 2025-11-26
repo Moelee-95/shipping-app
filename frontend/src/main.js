@@ -11,6 +11,7 @@ import toast from './plugins/toast'
 
 // Styles
 import './assets/styles/main.scss'
+import './assets/styles/element-plus-overrides.scss'
 import 'bootstrap/dist/css/bootstrap.min.css'
 
 const app = createApp(App)
