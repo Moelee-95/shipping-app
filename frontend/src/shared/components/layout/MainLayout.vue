@@ -44,7 +44,7 @@ const toggleSidebar = () => {
 }
 
 .main-layout__page {
-  padding: 24px;
+  padding: 5px;
   padding-bottom: 80px;
 }
 

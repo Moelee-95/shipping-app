@@ -32,6 +32,7 @@ return new class extends Migration
             // Package Information
             $table->text('package_description')->nullable();
             $table->decimal('package_weight', 10, 2)->nullable();
+            $table->string('package_dimensions')->nullable();
 
             // Pricing
             $table->decimal('price', 10, 2);

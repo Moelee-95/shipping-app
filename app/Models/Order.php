@@ -26,6 +26,7 @@ class Order extends Model
         'delivery_contact_phone',
         'package_description',
         'package_weight',
+        'package_dimensions',
         'price',
         'driver_earning',
         'status',

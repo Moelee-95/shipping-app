@@ -41,7 +41,9 @@ class OrderResource extends JsonResource
             // Package Information
             'package_description' => $this->package_description,
             'package_weight' => $this->package_weight ? (float) $this->package_weight : null,
+            'package_dimensions' => $this->package_dimensions,
             'weight' => $this->package_weight ? (float) $this->package_weight : null, // alias for frontend
+            'dimensions' => $this->package_dimensions, // alias for frontend
 
             // Pricing
             'price' => (float) $this->price,

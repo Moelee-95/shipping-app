@@ -140,6 +140,7 @@ class CompanyController extends Controller
             // Package Information
             'package_description' => 'nullable|string',
             'package_weight' => 'nullable|numeric',
+            'package_dimensions' => 'nullable|string|max:100',
 
             // Pricing
             'price' => 'required|numeric|min:0',
@@ -201,6 +202,7 @@ class CompanyController extends Controller
             'delivery_contact_phone' => 'nullable|string',
             'package_description' => 'nullable|string',
             'package_weight' => 'nullable|numeric',
+            'package_dimensions' => 'nullable|string|max:100',
             'price' => 'sometimes|required|numeric|min:0',
             'driver_earning' => 'nullable|numeric|min:0',
             'deadline' => 'nullable|date',

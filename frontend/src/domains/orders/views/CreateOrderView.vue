@@ -1,201 +1,484 @@
 <template>
   <div class="create-order-view">
-    <PageHeader
-      :title="isEditing ? 'Edit Order' : 'Create New Order'"
-      :subtitle="isEditing ? 'Update order details' : 'Fill in the details to create a new shipping order'"
+    <!-- Page Header -->
+    <div class="page-header">
+      <el-page-header @back="goBack">
+        <template #content>
+          <div class="header-content">
+            <h1 class="page-title">{{ isEditing ? 'Edit Order' : 'Create New Order' }}</h1>
+            <p class="page-subtitle">{{ isEditing ? 'Update order details' : 'Follow the steps to create your shipping order' }}</p>
+          </div>
+        </template>
+      </el-page-header>
+    </div>
+
+    <!-- Main Form Container -->
+    <div class="form-container">
+      <!-- Steps Progress -->
+      <el-card class="steps-card" shadow="never">
+        <el-steps :active="currentStep" align-center finish-status="success">
+          <el-step title="Locations" description="Pickup & Delivery">
+            <template #icon>
+              <el-icon :size="24"><LocationFilled /></el-icon>
+            </template>
+          </el-step>
+          <el-step title="Package" description="Details & Pricing">
+            <template #icon>
+              <el-icon :size="24"><Box /></el-icon>
+            </template>
+          </el-step>
+          <el-step title="Finalize" description="Review & Submit">
+            <template #icon>
+              <el-icon :size="24"><Check /></el-icon>
+            </template>
+          </el-step>
+        </el-steps>
+      </el-card>
+
+      <!-- Form Steps Content -->
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="formRules"
+        label-position="top"
+        size="large"
+        class="order-form"
+      >
+        <!-- Step 1: Branch Selection & Recipient -->
+        <transition name="slide-fade" mode="out-in">
+          <el-card v-show="currentStep === 0" class="step-card" shadow="hover">
+            <template #header>
+              <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-info">
+                  <h3 class="step-title">Pickup & Delivery Locations</h3>
+                  <p class="step-description">Select the branch locations for pickup and delivery</p>
+                </div>
+              </div>
+            </template>
+
+            <div class="step-content">
+              <!-- Branch Selection -->
+              <el-row :gutter="24" class="branch-row">
+                <el-col :xs="24" :lg="12">
+                  <div class="branch-card pickup-card">
+                    <div class="branch-header">
+                      <el-icon class="branch-icon" :size="24" color="#67c23a">
+                        <Location />
+                      </el-icon>
+                      <span class="branch-title">Pickup Branch</span>
+                    </div>
+                    <el-form-item prop="pickup_branch_id">
+                      <el-select
+                        v-model="form.pickup_branch_id"
+                        placeholder="Select pickup branch"
+                        filterable
+                        size="large"
+                        class="full-width"
+                      >
+                        <el-option
+                          v-for="branch in branchesStore.branchOptions"
+                          :key="branch.value"
+                          :label="branch.label"
+                          :value="branch.value"
+                        >
+                          <div class="branch-option">
+                            <span class="branch-name">{{ branch.label }}</span>
+                          </div>
+                        </el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-alert
+                      v-if="selectedPickupBranch"
+                      type="success"
+                      :closable="false"
+                      class="branch-info"
+                    >
+                      <div class="branch-details">
+                        <p><el-icon><Location /></el-icon> {{ selectedPickupBranch.address }}</p>
+                        <p><el-icon><Location /></el-icon> {{ selectedPickupBranch.city }}, {{ selectedPickupBranch.state }} {{ selectedPickupBranch.zip_code }}</p>
+                        <p><el-icon><Phone /></el-icon> {{ selectedPickupBranch.phone }}</p>
+                      </div>
+                    </el-alert>
+                  </div>
+                </el-col>
+
+                <el-col :xs="24" :lg="12">
+                  <div class="branch-card delivery-card">
+                    <div class="branch-header">
+                      <el-icon class="branch-icon" :size="24" color="#f56c6c">
+                        <LocationFilled />
+                      </el-icon>
+                      <span class="branch-title">Delivery Branch</span>
+                    </div>
+                    <el-form-item prop="delivery_branch_id">
+                      <el-select
+                        v-model="form.delivery_branch_id"
+                        placeholder="Select delivery branch"
+                        filterable
+                        size="large"
+                        class="full-width"
+                      >
+                        <el-option
+                          v-for="branch in branchesStore.branchOptions"
+                          :key="branch.value"
+                          :label="branch.label"
+                          :value="branch.value"
+                          :disabled="branch.value === form.pickup_branch_id"
+                        >
+                          <div class="branch-option">
+                            <span class="branch-name">{{ branch.label }}</span>
+                          </div>
+                        </el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-alert
+                      v-if="selectedDeliveryBranch"
+                      type="error"
+                      :closable="false"
+                      class="branch-info"
+                    >
+                      <div class="branch-details">
+                        <p><el-icon><Location /></el-icon> {{ selectedDeliveryBranch.address }}</p>
+                        <p><el-icon><Location /></el-icon> {{ selectedDeliveryBranch.city }}, {{ selectedDeliveryBranch.state }} {{ selectedDeliveryBranch.zip_code }}</p>
+                        <p><el-icon><Phone /></el-icon> {{ selectedDeliveryBranch.phone }}</p>
+                      </div>
+                    </el-alert>
+                  </div>
+                </el-col>
+              </el-row>
+
+              <!-- Recipient Information -->
+              <el-divider content-position="left">
+                <el-icon><User /></el-icon>
+                <span class="divider-text">Recipient Information</span>
+              </el-divider>
+
+              <el-row :gutter="20">
+                <el-col :xs="24" :md="12">
+                  <el-form-item label="Recipient Name" prop="delivery_contact_name">
+                    <el-input
+                      v-model="form.delivery_contact_name"
+                      placeholder="Full name of recipient"
+                      :prefix-icon="User"
+                      size="large"
+                      clearable
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :xs="24" :md="12">
+                  <el-form-item label="Recipient Phone" prop="delivery_contact_phone">
+                    <el-input
+                      v-model="form.delivery_contact_phone"
+                      placeholder="+1 (234) 567-8900"
+                      :prefix-icon="Phone"
+                      size="large"
+                      clearable
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </div>
+          </el-card>
+        </transition>
+
+        <!-- Step 2: Package Details -->
+        <transition name="slide-fade" mode="out-in">
+          <el-card v-show="currentStep === 1" class="step-card" shadow="hover">
+            <template #header>
+              <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-info">
+                  <h3 class="step-title">Package Information</h3>
+                  <p class="step-description">Enter package details and pricing</p>
+                </div>
+              </div>
+            </template>
+
+            <div class="step-content">
+              <el-row :gutter="20">
+                <el-col :xs="24" :md="8">
+                  <el-form-item label="Weight (kg)" prop="package_weight">
+                    <el-input-number
+                      v-model="form.package_weight"
+                      :min="0.1"
+                      :step="0.1"
+                      :precision="2"
+                      placeholder="0.0"
+                      size="large"
+                      class="full-width"
+                      controls-position="right"
+                    />
+                    <div class="field-hint">
+                      <el-icon><InfoFilled /></el-icon>
+                      Minimum 0.1 kg
+                    </div>
+                  </el-form-item>
+                </el-col>
+                <el-col :xs="24" :md="8">
+                  <el-form-item label="Dimensions" prop="package_dimensions">
+                    <el-input
+                      v-model="form.package_dimensions"
+                      placeholder="e.g., 10x20x30 cm"
+                      :prefix-icon="Box"
+                      size="large"
+                      clearable
+                    />
+                    <div class="field-hint">
+                      <el-icon><InfoFilled /></el-icon>
+                      Length x Width x Height
+                    </div>
+                  </el-form-item>
+                </el-col>
+                <el-col :xs="24" :md="8">
+                  <el-form-item label="Price ($)" prop="price">
+                    <el-input-number
+                      v-model="form.price"
+                      :min="1"
+                      :step="0.01"
+                      :precision="2"
+                      placeholder="0.00"
+                      size="large"
+                      class="full-width"
+                      controls-position="right"
+                    />
+                    <div class="field-hint">
+                      <el-icon><InfoFilled /></el-icon>
+                      Shipping cost
+                    </div>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="Package Description" prop="package_description">
+                    <el-input
+                      v-model="form.package_description"
+                      type="textarea"
+                      :rows="5"
+                      placeholder="Describe the package contents, special handling requirements, and any important notes..."
+                      maxlength="500"
+                      show-word-limit
+                      size="large"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </div>
+          </el-card>
+        </transition>
+
+        <!-- Step 3: Additional Information & Review -->
+        <transition name="slide-fade" mode="out-in">
+          <el-card v-show="currentStep === 2" class="step-card" shadow="hover">
+            <template #header>
+              <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-info">
+                  <h3 class="step-title">Review & Finalize</h3>
+                  <p class="step-description">Add notes and review your order</p>
+                </div>
+              </div>
+            </template>
+
+            <div class="step-content">
+              <!-- Additional Notes -->
+              <el-row :gutter="20">
+                <el-col :span="24">
+                  <el-form-item label="Notes for Driver (Optional)">
+                    <el-input
+                      v-model="form.notes"
+                      type="textarea"
+                      :rows="4"
+                      placeholder="Any special instructions for the driver (delivery time preferences, access codes, etc.)..."
+                      maxlength="300"
+                      show-word-limit
+                      size="large"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+
+              <!-- Order Summary -->
+              <el-divider content-position="left">
+                <el-icon><Document /></el-icon>
+                <span class="divider-text">Order Summary</span>
+              </el-divider>
+
+              <div class="order-summary">
+                <el-row :gutter="16">
+                  <el-col :xs="24" :md="12">
+                    <div class="summary-section">
+                      <h4 class="summary-title">
+                        <el-icon color="#67c23a"><Location /></el-icon>
+                        Pickup Location
+                      </h4>
+                      <div class="summary-content" v-if="selectedPickupBranch">
+                        <p class="summary-item"><strong>{{ selectedPickupBranch.name }}</strong></p>
+                        <p class="summary-item">{{ selectedPickupBranch.address }}</p>
+                        <p class="summary-item">{{ selectedPickupBranch.city }}, {{ selectedPickupBranch.state }} {{ selectedPickupBranch.zip_code }}</p>
+                      </div>
+                    </div>
+                  </el-col>
+                  <el-col :xs="24" :md="12">
+                    <div class="summary-section">
+                      <h4 class="summary-title">
+                        <el-icon color="#f56c6c"><LocationFilled /></el-icon>
+                        Delivery Location
+                      </h4>
+                      <div class="summary-content" v-if="selectedDeliveryBranch">
+                        <p class="summary-item"><strong>{{ selectedDeliveryBranch.name }}</strong></p>
+                        <p class="summary-item">{{ selectedDeliveryBranch.address }}</p>
+                        <p class="summary-item">{{ selectedDeliveryBranch.city }}, {{ selectedDeliveryBranch.state }} {{ selectedDeliveryBranch.zip_code }}</p>
+                      </div>
+                    </div>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="16" class="mt-3">
+                  <el-col :xs="24" :md="12">
+                    <div class="summary-section">
+                      <h4 class="summary-title">
+                        <el-icon color="#409eff"><User /></el-icon>
+                        Recipient Details
+                      </h4>
+                      <div class="summary-content">
+                        <p class="summary-item"><strong>{{ form.delivery_contact_name }}</strong></p>
+                        <p class="summary-item">{{ form.delivery_contact_phone }}</p>
+                      </div>
+                    </div>
+                  </el-col>
+                  <el-col :xs="24" :md="12">
+                    <div class="summary-section">
+                      <h4 class="summary-title">
+                        <el-icon color="#e6a23c"><Box /></el-icon>
+                        Package Information
+                      </h4>
+                      <div class="summary-content">
+                        <p class="summary-item"><strong>Weight:</strong> {{ form.package_weight }} kg</p>
+                        <p class="summary-item" v-if="form.package_dimensions"><strong>Dimensions:</strong> {{ form.package_dimensions }}</p>
+                        <p class="summary-item price-item"><strong>Price:</strong> ${{ form.price?.toFixed(2) }}</p>
+                      </div>
+                    </div>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="16" class="mt-3" v-if="form.package_description">
+                  <el-col :span="24">
+                    <div class="summary-section">
+                      <h4 class="summary-title">
+                        <el-icon color="#909399"><Document /></el-icon>
+                        Description
+                      </h4>
+                      <div class="summary-content">
+                        <p class="summary-item">{{ form.package_description }}</p>
+                      </div>
+                    </div>
+                  </el-col>
+                </el-row>
+              </div>
+            </div>
+          </el-card>
+        </transition>
+
+        <!-- Navigation Buttons -->
+        <div class="form-navigation">
+          <el-button
+            v-if="currentStep > 0"
+            size="large"
+            @click="previousStep"
+          >
+            <el-icon><ArrowLeft /></el-icon>
+            Previous
+          </el-button>
+          <div class="spacer"></div>
+          <el-button
+            size="large"
+            @click="goBack"
+          >
+            <el-icon><Close /></el-icon>
+            Cancel
+          </el-button>
+          <el-button
+            v-if="currentStep < 2"
+            type="primary"
+            size="large"
+            @click="nextStep"
+          >
+            Next
+            <el-icon><ArrowRight /></el-icon>
+          </el-button>
+          <el-button
+            v-else
+            type="primary"
+            size="large"
+            :loading="loading"
+            @click="handleSubmit"
+          >
+            <el-icon v-if="!loading"><Check /></el-icon>
+            {{ isEditing ? 'Update Order' : 'Create Order' }}
+          </el-button>
+        </div>
+      </el-form>
+    </div>
+
+    <!-- Success Dialog -->
+    <el-dialog
+      v-model="showSuccessDialog"
+      title="Success!"
+      width="500px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      align-center
     >
-      <template #actions>
-        <v-btn variant="outlined" @click="goBack">
-          <v-icon start>mdi-arrow-left</v-icon>
-          Back
-        </v-btn>
+      <div class="success-content">
+        <el-result icon="success" title="Order Created Successfully!">
+          <template #sub-title>
+            <p>Your order has been created and is now available for drivers to accept.</p>
+            <p class="next-action">What would you like to do next?</p>
+          </template>
+        </el-result>
+      </div>
+      <template #footer>
+        <div class="dialog-actions">
+          <el-button size="large" @click="createAnotherOrder">
+            <el-icon><Plus /></el-icon>
+            Create Another Order
+          </el-button>
+          <el-button type="primary" size="large" @click="goToManageOrders">
+            <el-icon><List /></el-icon>
+            Manage Orders
+          </el-button>
+        </div>
       </template>
-    </PageHeader>
-
-    <v-card max-width="800" class="mx-auto">
-      <v-card-text class="pa-6">
-        <el-form ref="formRef" :model="form" :rules="formRules" @submit.prevent="handleSubmit" class="create-order-form">
-          <h3 class="text-h6 mb-4">
-            <v-icon icon="mdi-map-marker" class="mr-2" color="success" />
-            Pickup Branch
-          </h3>
-          <v-row>
-            <v-col cols="12">
-              <el-form-item prop="pickup_branch_id" label="Select Pickup Branch">
-                <el-select
-                  v-model="form.pickup_branch_id"
-                  placeholder="Select a branch for pickup"
-                  filterable
-                  style="width: 100%"
-                  size="large"
-                >
-                  <el-option
-                    v-for="branch in branchesStore.branchOptions"
-                    :key="branch.value"
-                    :label="branch.label"
-                    :value="branch.value"
-                  />
-                </el-select>
-              </el-form-item>
-            </v-col>
-            <v-col v-if="selectedPickupBranch" cols="12">
-              <v-alert type="info" variant="tonal" density="compact">
-                <div class="text-body-2">
-                  <strong>Address:</strong> {{ selectedPickupBranch.address }}<br>
-                  <strong>City:</strong> {{ selectedPickupBranch.city }}, {{ selectedPickupBranch.state }} {{ selectedPickupBranch.zip_code }}<br>
-                  <strong>Phone:</strong> {{ selectedPickupBranch.phone }}
-                </div>
-              </v-alert>
-            </v-col>
-          </v-row>
-
-          <v-divider class="my-6" />
-
-          <h3 class="text-h6 mb-4">
-            <v-icon icon="mdi-map-marker-check" class="mr-2" color="error" />
-            Delivery Branch
-          </h3>
-          <v-row>
-            <v-col cols="12">
-              <el-form-item prop="delivery_branch_id" label="Select Delivery Branch">
-                <el-select
-                  v-model="form.delivery_branch_id"
-                  placeholder="Select a branch for delivery"
-                  filterable
-                  style="width: 100%"
-                  size="large"
-                >
-                  <el-option
-                    v-for="branch in branchesStore.branchOptions"
-                    :key="branch.value"
-                    :label="branch.label"
-                    :value="branch.value"
-                    :disabled="branch.value === form.pickup_branch_id"
-                  />
-                </el-select>
-              </el-form-item>
-            </v-col>
-            <v-col v-if="selectedDeliveryBranch" cols="12">
-              <v-alert type="info" variant="tonal" density="compact">
-                <div class="text-body-2">
-                  <strong>Address:</strong> {{ selectedDeliveryBranch.address }}<br>
-                  <strong>City:</strong> {{ selectedDeliveryBranch.city }}, {{ selectedDeliveryBranch.state }} {{ selectedDeliveryBranch.zip_code }}<br>
-                  <strong>Phone:</strong> {{ selectedDeliveryBranch.phone }}
-                </div>
-              </v-alert>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <el-form-item prop="delivery_contact_name" label="Recipient Name">
-                <el-input
-                  v-model="form.delivery_contact_name"
-                  placeholder="Name of person receiving the package"
-                >
-                  <template #prefix>
-                    <v-icon icon="mdi-account" size="small" />
-                  </template>
-                </el-input>
-              </el-form-item>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <el-form-item prop="delivery_contact_phone" label="Recipient Phone">
-                <el-input
-                  v-model="form.delivery_contact_phone"
-                  placeholder="Contact phone for delivery"
-                >
-                  <template #prefix>
-                    <v-icon icon="mdi-phone" size="small" />
-                  </template>
-                </el-input>
-              </el-form-item>
-            </v-col>
-          </v-row>
-
-          <v-divider class="my-6" />
-
-          <h3 class="text-h6 mb-4">Package Details</h3>
-          <v-row>
-            <v-col cols="12" sm="6">
-              <el-form-item prop="package_weight">
-                <el-input
-                  v-model.number="form.package_weight"
-                  type="number"
-                  placeholder="Weight (kg)"
-                  :min="0.1"
-                  :step="0.1"
-                >
-                  <template #prefix>
-                    <v-icon icon="mdi-weight" size="small" />
-                  </template>
-                </el-input>
-              </el-form-item>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <el-form-item prop="price">
-                <el-input
-                  v-model.number="form.price"
-                  type="number"
-                  placeholder="Price ($)"
-                  :min="1"
-                  :step="0.01"
-                >
-                  <template #prefix>
-                    <v-icon icon="mdi-currency-usd" size="small" />
-                  </template>
-                </el-input>
-              </el-form-item>
-            </v-col>
-            <v-col cols="12">
-              <el-form-item prop="package_description">
-                <el-input
-                  v-model="form.package_description"
-                  type="textarea"
-                  :rows="3"
-                  placeholder="Describe the package contents and any special handling instructions"
-                />
-              </el-form-item>
-            </v-col>
-            <v-col cols="12">
-              <el-form-item>
-                <el-input
-                  v-model="form.notes"
-                  type="textarea"
-                  :rows="2"
-                  placeholder="Any additional instructions for the driver (Optional)"
-                />
-              </el-form-item>
-            </v-col>
-          </v-row>
-        </el-form>
-      </v-card-text>
-
-      <v-divider />
-
-      <v-card-actions class="pa-6">
-        <v-spacer />
-        <v-btn variant="outlined" size="large" @click="goBack">Cancel</v-btn>
-        <v-btn
-          color="primary"
-          variant="flat"
-          size="large"
-          :loading="loading"
-          @click="handleSubmit"
-        >
-          {{ isEditing ? 'Update Order' : 'Create Order' }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessageBox } from 'element-plus'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import {
+  Location,
+  LocationFilled,
+  User,
+  Phone,
+  Box,
+  Document,
+  Close,
+  Check,
+  Plus,
+  List,
+  ArrowLeft,
+  ArrowRight,
+  InfoFilled
+} from '@element-plus/icons-vue'
 import { useOrdersStore } from '../store/orders.store'
 import { useBranchesStore } from '@/domains/shipping-company/store/branches.store'
-import { US_STATES } from '@/shared/utils/us-states'
 import { useNotification } from '@/shared/composables/useNotification'
-import PageHeader from '@/shared/components/common/PageHeader.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -205,6 +488,8 @@ const notification = useNotification()
 
 const formRef = ref(null)
 const loading = ref(false)
+const showSuccessDialog = ref(false)
+const currentStep = ref(0)
 
 const orderId = computed(() => route.params.id)
 const isEditing = computed(() => !!orderId.value && route.query.edit === 'true')
@@ -215,6 +500,7 @@ const initialForm = {
   delivery_contact_name: '',
   delivery_contact_phone: '',
   package_weight: null,
+  package_dimensions: '',
   price: null,
   package_description: '',
   notes: ''
@@ -263,6 +549,13 @@ const formRules = {
   package_description: [{ required: true, message: 'Package description is required', trigger: 'blur' }]
 }
 
+// Step fields mapping
+const stepFields = [
+  ['pickup_branch_id', 'delivery_branch_id', 'delivery_contact_name', 'delivery_contact_phone'],
+  ['package_weight', 'price', 'package_description'],
+  []
+]
+
 onMounted(async () => {
   // Fetch branches first
   await branchesStore.fetchBranches()
@@ -300,34 +593,94 @@ onMounted(async () => {
   }
 })
 
+const validateStep = async (step) => {
+  if (!formRef.value) return false
+
+  const fields = stepFields[step]
+  if (fields.length === 0) return true
+
+  try {
+    await formRef.value.validateField(fields)
+
+    // Additional validation for step 0
+    if (step === 0) {
+      if (form.pickup_branch_id === form.delivery_branch_id) {
+        ElMessage.error('Pickup and delivery branches must be different')
+        return false
+      }
+    }
+
+    return true
+  } catch (error) {
+    ElMessage.warning('Please fill in all required fields correctly')
+    return false
+  }
+}
+
+const nextStep = async () => {
+  const isValid = await validateStep(currentStep.value)
+  if (isValid && currentStep.value < 2) {
+    currentStep.value++
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
+const previousStep = () => {
+  if (currentStep.value > 0) {
+    currentStep.value--
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
 const handleSubmit = async () => {
   if (!formRef.value) return
 
   try {
     await formRef.value.validate()
   } catch (error) {
-    // Validation failed
+    ElMessage.error('Please complete all required fields')
     return
   }
 
   // Validate that pickup and delivery are different
   if (form.pickup_branch_id === form.delivery_branch_id) {
-    notification.error('Pickup and delivery branches must be different')
+    ElMessage.error('Pickup and delivery branches must be different')
     return
   }
 
   loading.value = true
   try {
-    // Send order data with branch IDs (addresses come from branches)
     if (isEditing.value) {
       await ordersStore.updateOrder(orderId.value, form)
+      notification.success('Order updated successfully')
+      goBack()
     } else {
       await ordersStore.createOrder(form)
+      showSuccessDialog.value = true
     }
-    goBack()
   } finally {
     loading.value = false
   }
+}
+
+const createAnotherOrder = () => {
+  showSuccessDialog.value = false
+  currentStep.value = 0
+  // Reset form to initial state
+  Object.keys(initialForm).forEach(key => {
+    form[key] = initialForm[key]
+  })
+  // Reset form validation
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const goToManageOrders = () => {
+  showSuccessDialog.value = false
+  router.push('/company/orders')
 }
 
 const goBack = () => {
@@ -336,7 +689,372 @@ const goBack = () => {
 </script>
 
 <style scoped>
-.create-order-form :deep(.el-form-item) {
-  margin-bottom: 0;
+.create-order-view {
+  padding: 16px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  min-height: calc(100vh - 64px);
+}
+
+.page-header {
+  background: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.header-content {
+  margin-left: 8px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 4px 0;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: #909399;
+  margin: 0;
+}
+
+.form-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.steps-card {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  border: none;
+}
+
+.order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step-card {
+  border-radius: 8px;
+  border: none;
+  min-height: 450px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
+}
+
+.step-info {
+  flex: 1;
+}
+
+.step-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 2px 0;
+}
+
+.step-description {
+  font-size: 13px;
+  color: #909399;
+  margin: 0;
+}
+
+.step-content {
+  padding: 16px 0;
+}
+
+.branch-row {
+  margin-bottom: 16px;
+}
+
+.branch-card {
+  padding: 16px;
+  border: 2px solid #ebeef5;
+  border-radius: 8px;
+  background: #fafafa;
+  transition: all 0.3s ease;
+}
+
+.branch-card:hover {
+  border-color: #409eff;
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
+}
+
+.pickup-card:hover {
+  border-color: #67c23a;
+  box-shadow: 0 4px 12px rgba(103, 194, 58, 0.15);
+}
+
+.delivery-card:hover {
+  border-color: #f56c6c;
+  box-shadow: 0 4px 12px rgba(245, 108, 108, 0.15);
+}
+
+.branch-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.branch-icon {
+  display: flex;
+}
+
+.branch-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.branch-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.branch-name {
+  font-weight: 500;
+}
+
+.branch-info {
+  margin-top: 12px;
+  border-radius: 8px;
+}
+
+.branch-details p {
+  margin: 8px 0;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.divider-text {
+  margin-left: 8px;
+  font-weight: 500;
+  color: #606266;
+}
+
+.field-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.order-summary {
+  background: #f9fafb;
+  padding: 24px;
+  border-radius: 8px;
+  border: 1px solid #ebeef5;
+}
+
+.summary-section {
+  margin-bottom: 20px;
+}
+
+.summary-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 12px 0;
+}
+
+.summary-content {
+  padding-left: 28px;
+}
+
+.summary-item {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.6;
+}
+
+.price-item {
+  font-size: 16px;
+  font-weight: 600;
+  color: #409eff;
+}
+
+.mt-3 {
+  margin-top: 20px;
+}
+
+.form-navigation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.success-content {
+  padding: 20px 0;
+}
+
+.next-action {
+  margin-top: 12px;
+  font-weight: 500;
+  color: #606266;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Animations */
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
+.slide-fade-leave-to {
+  transform: translateX(-20px);
+  opacity: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .create-order-view {
+    padding: 16px;
+  }
+
+  .page-header {
+    padding: 16px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
+  .step-number {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .step-title {
+    font-size: 18px;
+  }
+
+  .form-navigation {
+    flex-wrap: wrap;
+  }
+
+  .form-navigation .el-button {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .spacer {
+    display: none;
+  }
+
+  .dialog-actions {
+    flex-direction: column;
+  }
+
+  .dialog-actions .el-button {
+    width: 100%;
+  }
+
+  .branch-card {
+    margin-bottom: 16px;
+  }
+}
+
+/* Element Plus Customizations */
+:deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #606266;
+  margin-bottom: 8px;
+}
+
+:deep(.el-card__header) {
+  background: linear-gradient(135deg, #fafbfc 0%, #f5f7fa 100%);
+  border-bottom: 2px solid #ebeef5;
+  padding: 16px 20px;
+}
+
+:deep(.el-input-number) {
+  width: 100%;
+}
+
+:deep(.el-alert) {
+  border-radius: 8px;
+}
+
+:deep(.el-result) {
+  padding: 20px 0;
+}
+
+:deep(.el-steps) {
+  padding: 8px 0;
+}
+
+:deep(.el-step__title) {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+:deep(.el-step__description) {
+  font-size: 12px;
+}
+
+:deep(.el-divider__text) {
+  background: white;
 }
 </style>
