@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\DriverController;
 use App\Http\Controllers\Api\OrderController;
@@ -41,6 +42,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('company')->middleware('company')->group(function () {
         Route::get('/stats', [CompanyController::class, 'getStats']);
         Route::get('/analytics', [CompanyController::class, 'getAnalytics']);
+
+        // Branch routes
+        Route::get('/branches', [BranchController::class, 'index']);
+        Route::post('/branches', [BranchController::class, 'store']);
+        Route::get('/branches/{branch}', [BranchController::class, 'show']);
+        Route::patch('/branches/{branch}', [BranchController::class, 'update']);
+        Route::delete('/branches/{branch}', [BranchController::class, 'destroy']);
+        Route::patch('/branches/{branch}/set-primary', [BranchController::class, 'setPrimary']);
+
+        // Order routes
         Route::get('/orders', [CompanyController::class, 'getOrders']);
         Route::post('/orders', [CompanyController::class, 'createOrder']);
         Route::get('/orders/export', [CompanyController::class, 'exportOrders']);

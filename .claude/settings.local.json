@@ -6,7 +6,9 @@
       "Bash(php artisan:*)",
       "Bash(curl:*)",
       "Bash(rm:*)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(mv:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

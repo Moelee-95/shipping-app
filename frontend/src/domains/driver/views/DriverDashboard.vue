@@ -1,9 +1,9 @@
 <script setup>
 import { onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessageBox } from 'element-plus'
 import { useDriverStore } from '../store/driver.store'
 import { useNotification } from '@/shared/composables/useNotification'
-import { useConfirm } from '@/shared/composables/useConfirm'
 import PageHeader from '@/shared/components/common/PageHeader.vue'
 import DriverStats from '../components/DriverStats.vue'
 import AvailableOrdersGrid from '../components/AvailableOrdersGrid.vue'
@@ -12,7 +12,6 @@ import AcceptedOrdersList from '../components/AcceptedOrdersList.vue'
 const router = useRouter()
 const driverStore = useDriverStore()
 const notification = useNotification()
-const { confirm } = useConfirm()
 
 const stats = computed(() => driverStore.stats)
 const availableOrders = computed(() => driverStore.availableOrders.slice(0, 6))
@@ -29,18 +28,21 @@ onMounted(async () => {
 })
 
 const handleAcceptOrder = async (order) => {
-  const confirmed = await confirm({
-    title: 'Accept Order',
-    message: `Are you sure you want to accept order #${order.id}? You will be responsible for picking up and delivering this package.`,
-    confirmText: 'Accept',
-    type: 'info'
-  })
+  try {
+    await ElMessageBox.confirm(
+      `Are you sure you want to accept order #${order.id}? You will be responsible for picking up and delivering this package.`,
+      'Accept Order',
+      {
+        confirmButtonText: 'Accept',
+        cancelButtonText: 'Cancel',
+        type: 'info'
+      }
+    )
 
-  if (confirmed) {
-    try {
-      await driverStore.acceptOrder(order.id)
-      notification.success('Order accepted successfully!')
-    } catch (error) {
+    await driverStore.acceptOrder(order.id)
+    notification.success('Order accepted successfully!')
+  } catch (error) {
+    if (error !== 'cancel') {
       notification.error('Failed to accept order')
     }
   }
@@ -75,64 +77,45 @@ const handleUpdateStatus = async ({ order, status }) => {
     />
 
     <!-- Active Orders -->
-    <v-card
-      class="mb-6"
-      elevation="2"
-    >
-      <v-card-title class="d-flex justify-space-between align-center">
-        <span>
-          <v-icon
-            icon="mdi-truck-delivery"
-            class="mr-2"
-          />
-          Active Orders
-        </span>
-        <v-btn
-          variant="text"
-          color="primary"
-          size="small"
-          to="/driver/my-orders"
-        >
-          View All
-        </v-btn>
-      </v-card-title>
-      <v-card-text>
-        <AcceptedOrdersList
-          :orders="activeOrders"
-          :loading="loading"
-          @view="handleViewOrder"
-          @update-status="handleUpdateStatus"
-        />
-      </v-card-text>
-    </v-card>
+    <el-card class="mb-6" shadow="hover">
+      <template #header>
+        <div class="d-flex justify-space-between align-center">
+          <span>
+            <v-icon icon="mdi-truck-delivery" class="mr-2" />
+            Active Orders
+          </span>
+          <el-button type="primary" text @click="router.push('/driver/my-orders')">
+            View All
+          </el-button>
+        </div>
+      </template>
+      <AcceptedOrdersList
+        :orders="activeOrders"
+        :loading="loading"
+        @view="handleViewOrder"
+        @update-status="handleUpdateStatus"
+      />
+    </el-card>
 
     <!-- Available Orders -->
-    <v-card elevation="2">
-      <v-card-title class="d-flex justify-space-between align-center">
-        <span>
-          <v-icon
-            icon="mdi-package-variant"
-            class="mr-2"
-          />
-          Available Orders
-        </span>
-        <v-btn
-          variant="text"
-          color="primary"
-          size="small"
-          to="/driver/available-orders"
-        >
-          View All
-        </v-btn>
-      </v-card-title>
-      <v-card-text>
-        <AvailableOrdersGrid
-          :orders="availableOrders"
-          :loading="loading"
-          @accept="handleAcceptOrder"
-          @view="handleViewOrder"
-        />
-      </v-card-text>
-    </v-card>
+    <el-card shadow="hover">
+      <template #header>
+        <div class="d-flex justify-space-between align-center">
+          <span>
+            <v-icon icon="mdi-package-variant" class="mr-2" />
+            Available Orders
+          </span>
+          <el-button type="primary" text @click="router.push('/driver/available-orders')">
+            View All
+          </el-button>
+        </div>
+      </template>
+      <AvailableOrdersGrid
+        :orders="availableOrders"
+        :loading="loading"
+        @accept="handleAcceptOrder"
+        @view="handleViewOrder"
+      />
+    </el-card>
   </div>
 </template>

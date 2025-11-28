@@ -52,7 +52,7 @@ class CompanyController extends Controller
         $dateFrom = $request->query('dateFrom');
         $dateTo = $request->query('dateTo');
 
-        $query = $company->orders()->with(['driver.user', 'activities.user']);
+        $query = $company->orders()->with(['driver.user', 'activities.user', 'pickupBranch', 'deliveryBranch']);
 
         if ($status) {
             $query->where('status', $status);
@@ -61,13 +61,19 @@ class CompanyController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('tracking_number', 'like', "%{$search}%")
-                    ->orWhere('pickup_city', 'like', "%{$search}%")
-                    ->orWhere('delivery_city', 'like', "%{$search}%")
-                    ->orWhere('delivery_address', 'like', "%{$search}%")
-                    ->orWhere('pickup_address', 'like', "%{$search}%")
                     ->orWhere('delivery_contact_name', 'like', "%{$search}%")
                     ->orWhere('package_description', 'like', "%{$search}%")
                     ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhereHas('pickupBranch', function ($branchQuery) use ($search) {
+                        $branchQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('city', 'like', "%{$search}%")
+                            ->orWhere('address', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('deliveryBranch', function ($branchQuery) use ($search) {
+                        $branchQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('city', 'like', "%{$search}%")
+                            ->orWhere('address', 'like', "%{$search}%");
+                    })
                     ->orWhereHas('driver.user', function ($driverQuery) use ($search) {
                         $driverQuery->where('name', 'like', "%{$search}%");
                     });
@@ -108,7 +114,7 @@ class CompanyController extends Controller
             ], 403);
         }
 
-        return new OrderResource($order->load(['company', 'driver', 'activities']));
+        return new OrderResource($order->load(['company', 'driver', 'activities', 'pickupBranch', 'deliveryBranch']));
     }
 
     /**
@@ -123,27 +129,17 @@ class CompanyController extends Controller
         }
 
         $validated = $request->validate([
-            // Pickup Information
-            'pickup_address' => 'required|string',
-            'pickup_city' => 'required|string',
-            'pickup_state' => 'required|string',
-            'pickup_zip' => 'required|string',
-            'pickup_contact_name' => 'nullable|string',
-            'pickup_contact_phone' => 'nullable|string',
+            // Branch Information
+            'pickup_branch_id' => 'required|exists:branches,id',
+            'delivery_branch_id' => 'required|exists:branches,id|different:pickup_branch_id',
 
-            // Delivery Information
-            'delivery_address' => 'required|string',
-            'delivery_city' => 'required|string',
-            'delivery_state' => 'required|string',
-            'delivery_zip' => 'required|string',
+            // Delivery Contact Information (for recipient at delivery branch)
             'delivery_contact_name' => 'nullable|string',
             'delivery_contact_phone' => 'nullable|string',
 
             // Package Information
-            'package_type' => 'nullable|string',
             'package_description' => 'nullable|string',
             'package_weight' => 'nullable|numeric',
-            'package_dimensions' => 'nullable|string',
 
             // Pricing
             'price' => 'required|numeric|min:0',
@@ -169,7 +165,7 @@ class CompanyController extends Controller
 
         return response()->json([
             'message' => 'Order created successfully',
-            'order' => new OrderResource($order->load('company')),
+            'order' => new OrderResource($order->load(['company', 'pickupBranch', 'deliveryBranch'])),
         ], 201);
     }
 
@@ -199,22 +195,12 @@ class CompanyController extends Controller
         }
 
         $validated = $request->validate([
-            'pickup_address' => 'sometimes|required|string',
-            'pickup_city' => 'sometimes|required|string',
-            'pickup_state' => 'sometimes|required|string',
-            'pickup_zip' => 'sometimes|required|string',
-            'pickup_contact_name' => 'nullable|string',
-            'pickup_contact_phone' => 'nullable|string',
-            'delivery_address' => 'sometimes|required|string',
-            'delivery_city' => 'sometimes|required|string',
-            'delivery_state' => 'sometimes|required|string',
-            'delivery_zip' => 'sometimes|required|string',
+            'pickup_branch_id' => 'sometimes|required|exists:branches,id',
+            'delivery_branch_id' => 'sometimes|required|exists:branches,id|different:pickup_branch_id',
             'delivery_contact_name' => 'nullable|string',
             'delivery_contact_phone' => 'nullable|string',
-            'package_type' => 'nullable|string',
             'package_description' => 'nullable|string',
             'package_weight' => 'nullable|numeric',
-            'package_dimensions' => 'nullable|string',
             'price' => 'sometimes|required|numeric|min:0',
             'driver_earning' => 'nullable|numeric|min:0',
             'deadline' => 'nullable|date',
@@ -231,7 +217,7 @@ class CompanyController extends Controller
 
         return response()->json([
             'message' => 'Order updated successfully',
-            'order' => new OrderResource($order->fresh(['company', 'driver'])),
+            'order' => new OrderResource($order->fresh(['company', 'driver', 'pickupBranch', 'deliveryBranch'])),
         ]);
     }
 
@@ -268,7 +254,7 @@ class CompanyController extends Controller
 
         return response()->json([
             'message' => 'Order cancelled successfully',
-            'order' => new OrderResource($order->fresh(['company', 'driver'])),
+            'order' => new OrderResource($order->fresh(['company', 'driver', 'pickupBranch', 'deliveryBranch'])),
         ]);
     }
 
@@ -317,7 +303,7 @@ class CompanyController extends Controller
         $format = $request->query('format', 'csv');
         $status = $request->query('status');
 
-        $query = $company->orders()->with(['driver.user']);
+        $query = $company->orders()->with(['driver.user', 'pickupBranch', 'deliveryBranch']);
 
         if ($status) {
             $query->where('status', $status);
@@ -326,7 +312,7 @@ class CompanyController extends Controller
         $orders = $query->get();
 
         if ($format === 'csv') {
-            $csv = "ID,Tracking Number,Status,Pickup City,Delivery City,Price,Created At\n";
+            $csv = "ID,Tracking Number,Status,Pickup Branch,Delivery Branch,Price,Created At\n";
 
             foreach ($orders as $order) {
                 $csv .= sprintf(
@@ -334,8 +320,8 @@ class CompanyController extends Controller
                     $order->id,
                     $order->tracking_number,
                     $order->status,
-                    $order->pickup_city,
-                    $order->delivery_city,
+                    $order->pickupBranch ? $order->pickupBranch->name : 'N/A',
+                    $order->deliveryBranch ? $order->deliveryBranch->name : 'N/A',
                     $order->price,
                     $order->created_at->format('Y-m-d H:i:s')
                 );

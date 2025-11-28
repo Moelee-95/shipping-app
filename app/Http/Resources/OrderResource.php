@@ -19,28 +19,29 @@ class OrderResource extends JsonResource
             'tracking_number' => $this->tracking_number,
             'company_id' => $this->company_id,
             'driver_id' => $this->driver_id,
+            'pickup_branch_id' => $this->pickup_branch_id,
+            'delivery_branch_id' => $this->delivery_branch_id,
 
-            // Pickup Information
-            'pickup_address' => $this->pickup_address,
-            'pickup_city' => $this->pickup_city,
-            'pickup_state' => $this->pickup_state,
-            'pickup_zip' => $this->pickup_zip,
-            'pickup_contact_name' => $this->pickup_contact_name,
-            'pickup_contact_phone' => $this->pickup_contact_phone,
+            // Pickup Information (from pickup branch)
+            'pickup_address' => $this->pickupBranch?->address,
+            'pickup_city' => $this->pickupBranch?->city,
+            'pickup_state' => $this->pickupBranch?->state,
+            'pickup_zip' => $this->pickupBranch?->zip_code,
+            'pickup_contact_name' => $this->pickupBranch?->contact_person,
+            'pickup_contact_phone' => $this->pickupBranch?->phone,
 
-            // Delivery Information
-            'delivery_address' => $this->delivery_address,
-            'delivery_city' => $this->delivery_city,
-            'delivery_state' => $this->delivery_state,
-            'delivery_zip' => $this->delivery_zip,
+            // Delivery Information (from delivery branch + order contact)
+            'delivery_address' => $this->deliveryBranch?->address,
+            'delivery_city' => $this->deliveryBranch?->city,
+            'delivery_state' => $this->deliveryBranch?->state,
+            'delivery_zip' => $this->deliveryBranch?->zip_code,
             'delivery_contact_name' => $this->delivery_contact_name,
             'delivery_contact_phone' => $this->delivery_contact_phone,
 
             // Package Information
-            'package_type' => $this->package_type,
             'package_description' => $this->package_description,
             'package_weight' => $this->package_weight ? (float) $this->package_weight : null,
-            'package_dimensions' => $this->package_dimensions,
+            'weight' => $this->package_weight ? (float) $this->package_weight : null, // alias for frontend
 
             // Pricing
             'price' => (float) $this->price,
@@ -54,12 +55,39 @@ class OrderResource extends JsonResource
             'delivered_at' => $this->delivered_at,
             'cancelled_at' => $this->cancelled_at,
             'deadline' => $this->deadline,
+            'pickup_date' => $this->deadline, // alias for frontend
 
             // Notes
             'notes' => $this->notes,
             'cancellation_reason' => $this->cancellation_reason,
 
-            // Relationships
+            // Branch Relationships
+            'pickup_branch' => $this->when($this->relationLoaded('pickupBranch'), function () {
+                return $this->pickupBranch ? [
+                    'id' => $this->pickupBranch->id,
+                    'name' => $this->pickupBranch->name,
+                    'address' => $this->pickupBranch->address,
+                    'city' => $this->pickupBranch->city,
+                    'state' => $this->pickupBranch->state,
+                    'zip_code' => $this->pickupBranch->zip_code,
+                    'phone' => $this->pickupBranch->phone,
+                    'contact_person' => $this->pickupBranch->contact_person,
+                ] : null;
+            }),
+            'delivery_branch' => $this->when($this->relationLoaded('deliveryBranch'), function () {
+                return $this->deliveryBranch ? [
+                    'id' => $this->deliveryBranch->id,
+                    'name' => $this->deliveryBranch->name,
+                    'address' => $this->deliveryBranch->address,
+                    'city' => $this->deliveryBranch->city,
+                    'state' => $this->deliveryBranch->state,
+                    'zip_code' => $this->deliveryBranch->zip_code,
+                    'phone' => $this->deliveryBranch->phone,
+                    'contact_person' => $this->deliveryBranch->contact_person,
+                ] : null;
+            }),
+
+            // Company and Driver Relationships
             'company' => $this->when($this->relationLoaded('company'), function () {
                 return [
                     'id' => $this->company->id,

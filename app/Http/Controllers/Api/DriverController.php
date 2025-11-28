@@ -45,29 +45,39 @@ class DriverController extends Controller
         $dateTo = $request->query('dateTo');
         $state = $request->query('state');
 
-        $query = Order::available()->with(['company', 'driver.user']);
+        $query = Order::available()->with(['company', 'driver.user', 'pickupBranch', 'deliveryBranch']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('tracking_number', 'like', "%{$search}%")
-                    ->orWhere('pickup_city', 'like', "%{$search}%")
-                    ->orWhere('delivery_city', 'like', "%{$search}%")
-                    ->orWhere('delivery_address', 'like', "%{$search}%")
-                    ->orWhere('pickup_address', 'like', "%{$search}%")
                     ->orWhere('delivery_contact_name', 'like', "%{$search}%")
                     ->orWhere('package_description', 'like', "%{$search}%")
                     ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhereHas('pickupBranch', function ($branchQuery) use ($search) {
+                        $branchQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('city', 'like', "%{$search}%")
+                            ->orWhere('address', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('deliveryBranch', function ($branchQuery) use ($search) {
+                        $branchQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('city', 'like', "%{$search}%")
+                            ->orWhere('address', 'like', "%{$search}%");
+                    })
                     ->orWhereHas('company', function ($companyQuery) use ($search) {
                         $companyQuery->where('company_name', 'like', "%{$search}%");
                     });
             });
         }
 
-        // Filter by state (pickup or delivery)
+        // Filter by state (pickup or delivery branch)
         if ($state) {
             $query->where(function ($q) use ($state) {
-                $q->where('pickup_state', $state)
-                    ->orWhere('delivery_state', $state);
+                $q->whereHas('pickupBranch', function ($branchQuery) use ($state) {
+                    $branchQuery->where('state', $state);
+                })
+                ->orWhereHas('deliveryBranch', function ($branchQuery) use ($state) {
+                    $branchQuery->where('state', $state);
+                });
             });
         }
 
@@ -104,7 +114,7 @@ class DriverController extends Controller
         $dateTo = $request->query('dateTo');
         $state = $request->query('state');
 
-        $query = $driver->orders()->with(['company', 'driver.user', 'activities.user']);
+        $query = $driver->orders()->with(['company', 'driver.user', 'activities.user', 'pickupBranch', 'deliveryBranch']);
 
         if ($status) {
             $query->where('status', $status);
@@ -113,24 +123,34 @@ class DriverController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('tracking_number', 'like', "%{$search}%")
-                    ->orWhere('pickup_city', 'like', "%{$search}%")
-                    ->orWhere('delivery_city', 'like', "%{$search}%")
-                    ->orWhere('delivery_address', 'like', "%{$search}%")
-                    ->orWhere('pickup_address', 'like', "%{$search}%")
                     ->orWhere('delivery_contact_name', 'like', "%{$search}%")
                     ->orWhere('package_description', 'like', "%{$search}%")
                     ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhereHas('pickupBranch', function ($branchQuery) use ($search) {
+                        $branchQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('city', 'like', "%{$search}%")
+                            ->orWhere('address', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('deliveryBranch', function ($branchQuery) use ($search) {
+                        $branchQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('city', 'like', "%{$search}%")
+                            ->orWhere('address', 'like', "%{$search}%");
+                    })
                     ->orWhereHas('company', function ($companyQuery) use ($search) {
                         $companyQuery->where('company_name', 'like', "%{$search}%");
                     });
             });
         }
 
-        // Filter by state (pickup or delivery)
+        // Filter by state (pickup or delivery branch)
         if ($state) {
             $query->where(function ($q) use ($state) {
-                $q->where('pickup_state', $state)
-                    ->orWhere('delivery_state', $state);
+                $q->whereHas('pickupBranch', function ($branchQuery) use ($state) {
+                    $branchQuery->where('state', $state);
+                })
+                ->orWhereHas('deliveryBranch', function ($branchQuery) use ($state) {
+                    $branchQuery->where('state', $state);
+                });
             });
         }
 
@@ -173,7 +193,7 @@ class DriverController extends Controller
 
         return response()->json([
             'message' => 'Order accepted successfully',
-            'data' => new OrderResource($order->load(['company', 'driver'])),
+            'data' => new OrderResource($order->load(['company', 'driver', 'pickupBranch', 'deliveryBranch'])),
         ]);
     }
 
@@ -220,7 +240,7 @@ class DriverController extends Controller
 
         return response()->json([
             'message' => 'Order status updated successfully',
-            'data' => new OrderResource($order->fresh(['company', 'driver', 'activities'])),
+            'data' => new OrderResource($order->fresh(['company', 'driver', 'activities', 'pickupBranch', 'deliveryBranch'])),
         ]);
     }
 }

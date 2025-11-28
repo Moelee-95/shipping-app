@@ -47,28 +47,26 @@
             <td class="font-weight-medium">${{ order.price }}</td>
             <td>{{ formatDate(order.created_at) }}</td>
             <td class="text-center">
-              <v-btn icon size="small" variant="text" @click="$emit('view', order)">
+              <el-button text size="small" @click="$emit('view', order)">
                 <v-icon size="small">mdi-eye</v-icon>
-              </v-btn>
-              <v-btn
+              </el-button>
+              <el-button
                 v-if="order.status === 'pending'"
-                icon
+                text
                 size="small"
-                variant="text"
                 @click="$emit('edit', order)"
               >
                 <v-icon size="small">mdi-pencil</v-icon>
-              </v-btn>
-              <v-btn
+              </el-button>
+              <el-button
                 v-if="canCancel(order.status)"
-                icon
+                text
+                type="danger"
                 size="small"
-                variant="text"
-                color="error"
                 @click="$emit('cancel', order)"
               >
                 <v-icon size="small">mdi-close-circle</v-icon>
-              </v-btn>
+              </el-button>
             </td>
           </tr>
         </tbody>
@@ -90,9 +88,10 @@
       title="No Orders Found"
       description="You haven't created any orders yet. Create your first order to get started."
     >
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$emit('create')">
+      <el-button type="primary" @click="$emit('create')">
+        <v-icon>mdi-plus</v-icon>
         Create Order
-      </v-btn>
+      </el-button>
     </EmptyState>
   </div>
 </template>

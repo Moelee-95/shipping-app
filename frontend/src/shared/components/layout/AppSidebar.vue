@@ -41,6 +41,11 @@ const companyMenuItems = [
     to: '/company/dashboard'
   },
   {
+    title: 'Branches',
+    icon: 'mdi-office-building',
+    to: '/company/branches'
+  },
+  {
     title: 'Create Order',
     icon: 'mdi-plus-box',
     to: '/company/orders/create'

@@ -17,6 +17,12 @@ export default [
         meta: { requiresAuth: true, role: 'shipping_company' }
       },
       {
+        path: 'branches',
+        name: 'CompanyBranches',
+        component: () => import('../views/BranchesView.vue'),
+        meta: { requiresAuth: true, role: 'shipping_company' }
+      },
+      {
         path: 'orders',
         name: 'ManageOrders',
         component: () => import('../views/ManageOrdersView.vue'),

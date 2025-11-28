@@ -5,7 +5,8 @@
     <FeaturesSection />
     <HowItWorksSection />
     <TestimonialsSection />
-    <PricingSection />
+    <CommissionSection />
+    <!-- <PricingSection /> -->
     <LandingFooter />
   </div>
 </template>
@@ -16,7 +17,8 @@ import HeroSection from '../components/HeroSection.vue'
 import FeaturesSection from '../components/FeaturesSection.vue'
 import HowItWorksSection from '../components/HowItWorksSection.vue'
 import TestimonialsSection from '../components/TestimonialsSection.vue'
-import PricingSection from '../components/PricingSection.vue'
+import CommissionSection from '../components/CommissionSection.vue'
+// import PricingSection from '../components/PricingSection.vue'
 import LandingFooter from '../components/LandingFooter.vue'
 </script>
 

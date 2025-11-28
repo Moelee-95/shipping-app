@@ -15,136 +15,95 @@
     <v-card max-width="800" class="mx-auto">
       <v-card-text class="pa-6">
         <el-form ref="formRef" :model="form" :rules="formRules" @submit.prevent="handleSubmit" class="create-order-form">
-          <h3 class="text-h6 mb-4">Pickup Information</h3>
+          <h3 class="text-h6 mb-4">
+            <v-icon icon="mdi-map-marker" class="mr-2" color="success" />
+            Pickup Branch
+          </h3>
           <v-row>
             <v-col cols="12">
-              <el-form-item prop="pickup_address">
-                <el-input
-                  v-model="form.pickup_address"
-                  placeholder="Enter full pickup address"
-                >
-                  <template #prefix>
-                    <v-icon icon="mdi-map-marker" size="small" />
-                  </template>
-                </el-input>
-              </el-form-item>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <el-form-item prop="pickup_city">
-                <el-input
-                  v-model="form.pickup_city"
-                  placeholder="Pickup City"
-                />
-              </el-form-item>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <el-form-item prop="pickup_state">
+              <el-form-item prop="pickup_branch_id" label="Select Pickup Branch">
                 <el-select
-                  v-model="form.pickup_state"
-                  placeholder="Pickup State"
+                  v-model="form.pickup_branch_id"
+                  placeholder="Select a branch for pickup"
                   filterable
                   style="width: 100%"
+                  size="large"
                 >
                   <el-option
-                    v-for="state in US_STATES"
-                    :key="state.value"
-                    :label="`${state.label} (${state.value})`"
-                    :value="state.value"
+                    v-for="branch in branchesStore.branchOptions"
+                    :key="branch.value"
+                    :label="branch.label"
+                    :value="branch.value"
                   />
                 </el-select>
               </el-form-item>
             </v-col>
-            <v-col cols="12" sm="6">
-              <el-form-item prop="pickup_zip">
-                <el-input
-                  v-model="form.pickup_zip"
-                  placeholder="Pickup ZIP Code (e.g., 10001)"
-                />
-              </el-form-item>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <el-form-item prop="pickup_contact_phone">
-                <el-input
-                  v-model="form.pickup_contact_phone"
-                  placeholder="Pickup Contact Phone"
-                >
-                  <template #prefix>
-                    <v-icon icon="mdi-phone" size="small" />
-                  </template>
-                </el-input>
-              </el-form-item>
+            <v-col v-if="selectedPickupBranch" cols="12">
+              <v-alert type="info" variant="tonal" density="compact">
+                <div class="text-body-2">
+                  <strong>Address:</strong> {{ selectedPickupBranch.address }}<br>
+                  <strong>City:</strong> {{ selectedPickupBranch.city }}, {{ selectedPickupBranch.state }} {{ selectedPickupBranch.zip_code }}<br>
+                  <strong>Phone:</strong> {{ selectedPickupBranch.phone }}
+                </div>
+              </v-alert>
             </v-col>
           </v-row>
 
           <v-divider class="my-6" />
 
-          <h3 class="text-h6 mb-4">Delivery Information</h3>
+          <h3 class="text-h6 mb-4">
+            <v-icon icon="mdi-map-marker-check" class="mr-2" color="error" />
+            Delivery Branch
+          </h3>
           <v-row>
             <v-col cols="12">
-              <el-form-item prop="delivery_address">
-                <el-input
-                  v-model="form.delivery_address"
-                  placeholder="Enter full delivery address"
-                >
-                  <template #prefix>
-                    <v-icon icon="mdi-map-marker-check" size="small" />
-                  </template>
-                </el-input>
-              </el-form-item>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <el-form-item prop="delivery_city">
-                <el-input
-                  v-model="form.delivery_city"
-                  placeholder="Delivery City"
-                />
-              </el-form-item>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <el-form-item prop="delivery_state">
+              <el-form-item prop="delivery_branch_id" label="Select Delivery Branch">
                 <el-select
-                  v-model="form.delivery_state"
-                  placeholder="Delivery State"
+                  v-model="form.delivery_branch_id"
+                  placeholder="Select a branch for delivery"
                   filterable
                   style="width: 100%"
+                  size="large"
                 >
                   <el-option
-                    v-for="state in US_STATES"
-                    :key="state.value"
-                    :label="`${state.label} (${state.value})`"
-                    :value="state.value"
+                    v-for="branch in branchesStore.branchOptions"
+                    :key="branch.value"
+                    :label="branch.label"
+                    :value="branch.value"
+                    :disabled="branch.value === form.pickup_branch_id"
                   />
                 </el-select>
               </el-form-item>
             </v-col>
-            <v-col cols="12" sm="6">
-              <el-form-item prop="delivery_zip">
-                <el-input
-                  v-model="form.delivery_zip"
-                  placeholder="Delivery ZIP Code (e.g., 10001)"
-                />
-              </el-form-item>
+            <v-col v-if="selectedDeliveryBranch" cols="12">
+              <v-alert type="info" variant="tonal" density="compact">
+                <div class="text-body-2">
+                  <strong>Address:</strong> {{ selectedDeliveryBranch.address }}<br>
+                  <strong>City:</strong> {{ selectedDeliveryBranch.city }}, {{ selectedDeliveryBranch.state }} {{ selectedDeliveryBranch.zip_code }}<br>
+                  <strong>Phone:</strong> {{ selectedDeliveryBranch.phone }}
+                </div>
+              </v-alert>
             </v-col>
             <v-col cols="12" sm="6">
-              <el-form-item prop="delivery_contact_phone">
+              <el-form-item prop="delivery_contact_name" label="Recipient Name">
                 <el-input
-                  v-model="form.delivery_contact_phone"
-                  placeholder="Delivery Contact Phone"
+                  v-model="form.delivery_contact_name"
+                  placeholder="Name of person receiving the package"
                 >
                   <template #prefix>
-                    <v-icon icon="mdi-phone" size="small" />
+                    <v-icon icon="mdi-account" size="small" />
                   </template>
                 </el-input>
               </el-form-item>
             </v-col>
-            <v-col cols="12">
-              <el-form-item prop="delivery_contact_name">
+            <v-col cols="12" sm="6">
+              <el-form-item prop="delivery_contact_phone" label="Recipient Phone">
                 <el-input
-                  v-model="form.delivery_contact_name"
-                  placeholder="Recipient Name"
+                  v-model="form.delivery_contact_phone"
+                  placeholder="Contact phone for delivery"
                 >
                   <template #prefix>
-                    <v-icon icon="mdi-account" size="small" />
+                    <v-icon icon="mdi-phone" size="small" />
                   </template>
                 </el-input>
               </el-form-item>
@@ -231,13 +190,18 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessageBox } from 'element-plus'
 import { useOrdersStore } from '../store/orders.store'
+import { useBranchesStore } from '@/domains/shipping-company/store/branches.store'
 import { US_STATES } from '@/shared/utils/us-states'
+import { useNotification } from '@/shared/composables/useNotification'
 import PageHeader from '@/shared/components/common/PageHeader.vue'
 
 const router = useRouter()
 const route = useRoute()
 const ordersStore = useOrdersStore()
+const branchesStore = useBranchesStore()
+const notification = useNotification()
 
 const formRef = ref(null)
 const loading = ref(false)
@@ -246,20 +210,28 @@ const orderId = computed(() => route.params.id)
 const isEditing = computed(() => !!orderId.value && route.query.edit === 'true')
 
 const initialForm = {
-  pickup_address: '',
-  pickup_city: '',
-  pickup_phone: '',
-  delivery_address: '',
-  delivery_city: '',
-  delivery_phone: '',
-  recipient_name: '',
-  weight: null,
+  pickup_branch_id: null,
+  delivery_branch_id: null,
+  delivery_contact_name: '',
+  delivery_contact_phone: '',
+  package_weight: null,
   price: null,
-  description: '',
+  package_description: '',
   notes: ''
 }
 
 const form = reactive({ ...initialForm })
+
+// Computed properties for selected branches
+const selectedPickupBranch = computed(() => {
+  if (!form.pickup_branch_id) return null
+  return branchesStore.getBranchById(form.pickup_branch_id)
+})
+
+const selectedDeliveryBranch = computed(() => {
+  if (!form.delivery_branch_id) return null
+  return branchesStore.getBranchById(form.delivery_branch_id)
+})
 
 const validatePhone = (rule, value, callback) => {
   if (!value) {
@@ -282,15 +254,8 @@ const validatePositive = (rule, value, callback) => {
 }
 
 const formRules = {
-  pickup_address: [{ required: true, message: 'Pickup address is required', trigger: 'blur' }],
-  pickup_city: [{ required: true, message: 'Pickup city is required', trigger: 'blur' }],
-  pickup_state: [{ required: true, message: 'Pickup state is required', trigger: 'blur' }],
-  pickup_zip: [{ required: true, message: 'Pickup ZIP code is required', trigger: 'blur' }],
-  pickup_contact_phone: [{ validator: validatePhone, trigger: 'blur' }],
-  delivery_address: [{ required: true, message: 'Delivery address is required', trigger: 'blur' }],
-  delivery_city: [{ required: true, message: 'Delivery city is required', trigger: 'blur' }],
-  delivery_state: [{ required: true, message: 'Delivery state is required', trigger: 'blur' }],
-  delivery_zip: [{ required: true, message: 'Delivery ZIP code is required', trigger: 'blur' }],
+  pickup_branch_id: [{ required: true, message: 'Please select a pickup branch', trigger: 'change' }],
+  delivery_branch_id: [{ required: true, message: 'Please select a delivery branch', trigger: 'change' }],
   delivery_contact_phone: [{ validator: validatePhone, trigger: 'blur' }],
   delivery_contact_name: [{ required: true, message: 'Recipient name is required', trigger: 'blur' }],
   package_weight: [{ validator: validatePositive, trigger: 'blur' }],
@@ -299,6 +264,29 @@ const formRules = {
 }
 
 onMounted(async () => {
+  // Fetch branches first
+  await branchesStore.fetchBranches()
+
+  // Check if company has minimum branches required
+  if (!branchesStore.hasMinimumBranches) {
+    try {
+      await ElMessageBox.confirm(
+        'You need at least 2 branches to create an order. Would you like to add branches now?',
+        'Branches Required',
+        {
+          confirmButtonText: 'Go to Branches',
+          cancelButtonText: 'Cancel',
+          type: 'warning'
+        }
+      )
+      router.push('/company/branches')
+    } catch (error) {
+      // User cancelled, go back
+      router.back()
+    }
+    return
+  }
+
   if (isEditing.value) {
     await ordersStore.fetchOrder(orderId.value)
     const order = ordersStore.currentOrder
@@ -322,8 +310,15 @@ const handleSubmit = async () => {
     return
   }
 
+  // Validate that pickup and delivery are different
+  if (form.pickup_branch_id === form.delivery_branch_id) {
+    notification.error('Pickup and delivery branches must be different')
+    return
+  }
+
   loading.value = true
   try {
+    // Send order data with branch IDs (addresses come from branches)
     if (isEditing.value) {
       await ordersStore.updateOrder(orderId.value, form)
     } else {

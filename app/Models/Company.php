@@ -47,6 +47,22 @@ class Company extends Model
     }
 
     /**
+     * Get all branches of this company.
+     */
+    public function branches()
+    {
+        return $this->hasMany(Branch::class);
+    }
+
+    /**
+     * Get the primary branch of this company.
+     */
+    public function primaryBranch()
+    {
+        return $this->hasOne(Branch::class)->where('is_primary', true);
+    }
+
+    /**
      * Get all orders created by this company.
      */
     public function orders()

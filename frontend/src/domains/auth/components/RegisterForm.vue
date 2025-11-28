@@ -1,10 +1,13 @@
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuth } from '@/shared/composables/useAuth'
 import { useNotification } from '@/shared/composables/useNotification'
 import { registerSchema } from '@/shared/utils/validators'
+import { ROLES } from '@/shared/utils/constants'
 import RoleSelector from './RoleSelector.vue'
 
+const route = useRoute()
 const { register, loading } = useAuth()
 const notification = useNotification()
 
@@ -26,6 +29,14 @@ const errors = reactive({
   role: '',
   phone: '',
   company_name: ''
+})
+
+// Pre-select role from query parameter
+onMounted(() => {
+  const roleParam = route.query.role
+  if (roleParam && (roleParam === ROLES.SHIPPING_COMPANY || roleParam === ROLES.DRIVER)) {
+    form.role = roleParam
+  }
 })
 
 const showPassword = ref(false)

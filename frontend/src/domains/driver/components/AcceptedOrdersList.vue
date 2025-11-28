@@ -74,24 +74,23 @@ const getNextStatus = (currentStatus) => {
             </v-chip>
           </td>
           <td>
-            <v-btn
-              variant="text"
+            <el-button
+              type="primary"
+              text
               size="small"
-              color="primary"
               @click="$emit('view', order)"
             >
               View
-            </v-btn>
-            <v-btn
+            </el-button>
+            <el-button
               v-if="getNextStatus(order.status)"
-              variant="flat"
+              type="success"
               size="small"
-              color="success"
               class="ml-1"
               @click="$emit('update-status', { order, status: getNextStatus(order.status).next })"
             >
               {{ getNextStatus(order.status).label }}
-            </v-btn>
+            </el-button>
           </td>
         </tr>
       </tbody>

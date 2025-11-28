@@ -9,7 +9,9 @@
         </p>
       </div>
 
-      <!-- Billing Toggle -->
+      <!-- COMMENTED OUT: Old subscription-based pricing model -->
+      <!--
+      Billing Toggle
       <div class="billing-toggle">
         <span :class="{ active: !isYearly }">Monthly</span>
         <v-switch
@@ -71,6 +73,7 @@
           </div>
         </div>
       </div>
+      -->
 
       <!-- FAQ Preview -->
       <div class="faq-preview">
@@ -99,8 +102,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+// import { ref } from 'vue'
 
+// COMMENTED OUT: Old subscription-based pricing plans
+/*
 const isYearly = ref(false)
 
 const plans = [
@@ -158,6 +163,7 @@ const plans = [
     ]
   }
 ]
+*/
 </script>
 
 <style scoped>

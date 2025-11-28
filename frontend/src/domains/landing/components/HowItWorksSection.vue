@@ -48,7 +48,7 @@
           color="primary"
           size="x-large"
           class="text-none"
-          to="/register"
+          :to="getRegisterLink"
         >
           {{ selectedRole === 'company' ? 'Create Company Account' : 'Become a Driver' }}
           <v-icon end>mdi-arrow-right</v-icon>
@@ -103,6 +103,11 @@ const driverSteps = [
 const currentSteps = computed(() =>
   selectedRole.value === 'company' ? companySteps : driverSteps
 )
+
+const getRegisterLink = computed(() => {
+  const role = selectedRole.value === 'company' ? 'shipping_company' : 'driver'
+  return `/register?role=${role}`
+})
 </script>
 
 <style scoped>

@@ -20,22 +20,12 @@ class Order extends Model
         'tracking_number',
         'company_id',
         'driver_id',
-        'pickup_address',
-        'pickup_city',
-        'pickup_state',
-        'pickup_zip',
-        'pickup_contact_name',
-        'pickup_contact_phone',
-        'delivery_address',
-        'delivery_city',
-        'delivery_state',
-        'delivery_zip',
+        'pickup_branch_id',
+        'delivery_branch_id',
         'delivery_contact_name',
         'delivery_contact_phone',
-        'package_type',
         'package_description',
         'package_weight',
-        'package_dimensions',
         'price',
         'driver_earning',
         'status',
@@ -109,6 +99,22 @@ class Order extends Model
     public function driver()
     {
         return $this->belongsTo(Driver::class);
+    }
+
+    /**
+     * Get the pickup branch for this order.
+     */
+    public function pickupBranch()
+    {
+        return $this->belongsTo(Branch::class, 'pickup_branch_id');
+    }
+
+    /**
+     * Get the delivery branch for this order.
+     */
+    public function deliveryBranch()
+    {
+        return $this->belongsTo(Branch::class, 'delivery_branch_id');
     }
 
     /**

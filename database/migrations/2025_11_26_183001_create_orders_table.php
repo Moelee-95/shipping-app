@@ -21,27 +21,17 @@ return new class extends Migration
             // Driver relationship (nullable until driver accepts)
             $table->foreignId('driver_id')->nullable()->constrained()->onDelete('set null');
 
-            // Pickup Information
-            $table->text('pickup_address');
-            $table->string('pickup_city');
-            $table->string('pickup_state');
-            $table->string('pickup_zip');
-            $table->string('pickup_contact_name')->nullable();
-            $table->string('pickup_contact_phone')->nullable();
+            // Branch relationships (pickup and delivery branches)
+            $table->foreignId('pickup_branch_id')->nullable()->constrained('branches')->onDelete('set null');
+            $table->foreignId('delivery_branch_id')->nullable()->constrained('branches')->onDelete('set null');
 
-            // Delivery Information
-            $table->text('delivery_address');
-            $table->string('delivery_city');
-            $table->string('delivery_state');
-            $table->string('delivery_zip');
+            // Recipient/Delivery Contact Information (for person receiving at delivery branch)
             $table->string('delivery_contact_name')->nullable();
             $table->string('delivery_contact_phone')->nullable();
 
             // Package Information
-            $table->string('package_type')->nullable();
             $table->text('package_description')->nullable();
-            $table->decimal('package_weight', 8, 2)->nullable();
-            $table->string('package_dimensions')->nullable();
+            $table->decimal('package_weight', 10, 2)->nullable();
 
             // Pricing
             $table->decimal('price', 10, 2);
@@ -70,6 +60,8 @@ return new class extends Migration
             $table->index('tracking_number');
             $table->index(['company_id', 'status']);
             $table->index(['driver_id', 'status']);
+            $table->index('pickup_branch_id');
+            $table->index('delivery_branch_id');
         });
     }
 
