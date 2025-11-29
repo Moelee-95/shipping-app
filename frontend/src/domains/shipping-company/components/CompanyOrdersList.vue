@@ -45,7 +45,7 @@
               <span v-else class="text-grey">Unassigned</span>
             </td>
             <td class="font-weight-medium">${{ order.price }}</td>
-            <td>{{ formatDate(order.created_at) }}</td>
+            <td>{{ formatDateTime(order.created_at) }}</td>
             <td class="text-center">
               <el-button text size="small" @click="$emit('view', order)">
                 <v-icon size="small">mdi-eye</v-icon>
@@ -97,7 +97,7 @@
 </template>
 
 <script setup>
-import { formatDate, formatOrderStatus, getStatusColor as getColor, truncate } from '@/shared/utils/formatters'
+import { formatDateTime, formatOrderStatus, getStatusColor as getColor, truncate } from '@/shared/utils/formatters'
 import EmptyState from '@/shared/components/common/EmptyState.vue'
 
 defineProps({

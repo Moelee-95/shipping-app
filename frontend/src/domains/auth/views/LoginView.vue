@@ -18,13 +18,15 @@ onMounted(() => {
   <div class="login-view">
     <div class="login-view__container">
       <div class="login-view__header">
-        <div class="logo-wrapper">
-          <v-icon
-            icon="mdi-truck-fast"
-            size="56"
-            color="white"
-          />
-        </div>
+        <router-link to="/" class="logo-link">
+          <div class="logo-wrapper">
+            <v-icon
+              icon="mdi-truck-fast"
+              size="56"
+              color="white"
+            />
+          </div>
+        </router-link>
         <h1 class="text-h4 font-weight-bold mb-2">Welcome Back</h1>
         <p class="text-body-2 header-subtitle">Sign in to your account to continue</p>
       </div>
@@ -88,6 +90,11 @@ onMounted(() => {
   color: white;
 }
 
+.logo-link {
+  text-decoration: none;
+  display: inline-block;
+}
+
 .logo-wrapper {
   width: 80px;
   height: 80px;
@@ -98,6 +105,14 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   margin: 0 auto 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.logo-wrapper:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .header-subtitle {

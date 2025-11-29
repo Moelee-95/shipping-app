@@ -11,10 +11,29 @@ const props = defineProps({
   rail: {
     type: Boolean,
     default: false
+  },
+  mobile: {
+    type: Boolean,
+    default: false
+  },
+  drawerOpen: {
+    type: Boolean,
+    default: false
   }
 })
 
+const emit = defineEmits(['update:drawerOpen'])
+
 const { isDriver, isShippingCompany } = useAuth()
+
+const drawerModel = computed({
+  get: () => props.drawerOpen,
+  set: (value) => emit('update:drawerOpen', value)
+})
+
+const handleDrawerUpdate = (value) => {
+  emit('update:drawerOpen', value)
+}
 
 const driverMenuItems = [
   {
@@ -66,6 +85,44 @@ const menuItems = computed(() => {
 
 <template>
   <v-navigation-drawer
+    v-if="mobile"
+    v-model="drawerModel"
+    temporary
+    color="primary"
+    class="app-sidebar"
+  >
+    <v-list
+      nav
+      density="comfortable"
+    >
+      <v-list-item
+        v-for="item in menuItems"
+        :key="item.to"
+        :prepend-icon="item.icon"
+        :title="item.title"
+        :to="item.to"
+        rounded="xl"
+        class="my-1"
+        color="white"
+        @click="handleDrawerUpdate(false)"
+      />
+    </v-list>
+
+    <template #append>
+      <v-list nav>
+        <v-list-item
+          prepend-icon="mdi-help-circle-outline"
+          title="Help"
+          rounded="xl"
+          color="white"
+          @click="handleDrawerUpdate(false)"
+        />
+      </v-list>
+    </template>
+  </v-navigation-drawer>
+
+  <v-navigation-drawer
+    v-else
     :rail="rail"
     permanent
     color="primary"

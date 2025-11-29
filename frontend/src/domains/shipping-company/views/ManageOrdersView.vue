@@ -179,7 +179,7 @@ const handlePageChange = (page) => {
 
 const goToCreateOrder = () => router.push('/company/orders/create')
 const viewOrder = (order) => router.push(`/company/orders/${order.id}`)
-const editOrder = (order) => router.push(`/company/orders/${order.id}?edit=true`)
+const editOrder = (order) => router.push(`/company/orders/${order.id}/edit`)
 
 const handleCancelOrder = (order) => {
   orderToCancel.value = order

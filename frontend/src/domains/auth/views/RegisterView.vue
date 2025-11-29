@@ -18,13 +18,15 @@ onMounted(() => {
   <div class="register-view">
     <div class="register-view__container">
       <div class="register-view__header">
-        <div class="logo-wrapper">
-          <v-icon
-            icon="mdi-truck-fast"
-            size="40"
-            color="white"
-          />
-        </div>
+        <router-link to="/" class="logo-link">
+          <div class="logo-wrapper">
+            <v-icon
+              icon="mdi-truck-fast"
+              size="40"
+              color="white"
+            />
+          </div>
+        </router-link>
         <h1 class="text-h5 font-weight-bold mb-1">Create Account</h1>
         <p class="text-body-2 header-subtitle">Join ShipTrack to start shipping</p>
       </div>
@@ -73,6 +75,11 @@ onMounted(() => {
   color: white;
 }
 
+.logo-link {
+  text-decoration: none;
+  display: inline-block;
+}
+
 .logo-wrapper {
   width: 60px;
   height: 60px;
@@ -82,6 +89,13 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   margin: 0 auto 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.logo-wrapper:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
 }
 
 .header-subtitle {

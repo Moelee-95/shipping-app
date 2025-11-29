@@ -35,6 +35,12 @@ export default [
         meta: { requiresAuth: true, role: 'shipping_company' }
       },
       {
+        path: 'orders/:id/edit',
+        name: 'EditOrder',
+        component: () => import('@/domains/orders/views/CreateOrderView.vue'),
+        meta: { requiresAuth: true, role: 'shipping_company' }
+      },
+      {
         path: 'orders/:id',
         name: 'CompanyOrderDetails',
         component: () => import('@/domains/orders/views/OrderDetailsView.vue'),

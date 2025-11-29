@@ -7,6 +7,14 @@ defineProps({
   sidebarCollapsed: {
     type: Boolean,
     default: false
+  },
+  mobile: {
+    type: Boolean,
+    default: false
+  },
+  drawerOpen: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -80,7 +88,7 @@ const markAllAsRead = () => {
     class="app-header"
   >
     <v-app-bar-nav-icon @click="emit('toggle-sidebar')">
-      <v-icon :icon="sidebarCollapsed ? 'mdi-menu' : 'mdi-menu-open'" />
+      <v-icon :icon="mobile ? 'mdi-menu' : (sidebarCollapsed ? 'mdi-menu' : 'mdi-menu-open')" />
     </v-app-bar-nav-icon>
 
     <v-app-bar-title>

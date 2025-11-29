@@ -59,12 +59,21 @@
                   />
                 </v-col>
                 <v-col cols="12" sm="6">
+                  <PhoneInput
+                    v-if="editMode"
+                    v-model="form.phone"
+                    label="Phone Number"
+                    placeholder="(555) 123-4567"
+                    :required="true"
+                    size="default"
+                  />
                   <v-text-field
+                    v-else
                     v-model="form.phone"
                     label="Phone Number"
                     prepend-inner-icon="mdi-phone"
-                    :readonly="!editMode"
-                    :variant="editMode ? 'outlined' : 'plain'"
+                    :readonly="true"
+                    variant="plain"
                   />
                 </v-col>
                 <v-col cols="12" sm="6" v-if="user?.role === 'shipping_company'">
@@ -242,6 +251,7 @@ import { useAuthStore } from '@/domains/auth/store/auth.store'
 import { useNotification } from '@/shared/composables/useNotification'
 import { formatRole } from '@/shared/utils/formatters'
 import PageHeader from '@/shared/components/common/PageHeader.vue'
+import PhoneInput from '@/shared/components/form/PhoneInput.vue'
 import authService from '@/domains/auth/services/auth.service'
 
 const authStore = useAuthStore()

@@ -71,16 +71,12 @@
           </el-form-item>
         </v-col>
         <v-col cols="12" sm="6">
-          <el-form-item label="Phone" prop="phone">
-            <el-input
-              v-model="form.phone"
-              placeholder="+1 (555) 123-4567"
-            >
-              <template #prefix>
-                <v-icon size="small">mdi-phone</v-icon>
-              </template>
-            </el-input>
-          </el-form-item>
+          <PhoneInput
+            v-model="form.phone"
+            label="Phone"
+            placeholder="(555) 123-4567"
+            :required="true"
+          />
         </v-col>
       </v-row>
 
@@ -115,6 +111,7 @@
 import { ref, watch, computed } from 'vue'
 import { useBranchesStore } from '../store/branches.store'
 import { US_STATES } from '@/shared/utils/us-states'
+import PhoneInput from '@/shared/components/form/PhoneInput.vue'
 
 const props = defineProps({
   modelValue: {
